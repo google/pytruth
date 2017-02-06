@@ -24,6 +24,20 @@ Translated from the Java implementation,
 
 PyTruth is licensed under the [Apache 2.0 license](LICENSE).
 
+## Disclaimer
+
+PyTruth is not an official Google product.
+
+## Contributing
+
+Please see the [guidelines for contributing](CONTRIBUTING.md)
+before creating pull requests.
+
+## Support
+
+User group:
+[pytruth-users@googlegroups.com](https://groups.google.com/d/forum/pytruth-users)
+
 ## Overview
 
 Import the `truth` module and alias the `AssertThat()` method to begin asserting

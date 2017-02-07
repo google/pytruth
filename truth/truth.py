@@ -124,7 +124,6 @@ import numbers
 import re
 import six
 import threading
-import types
 
 from mock import mock
 
@@ -137,14 +136,7 @@ POSITIVE_INFINITY = float('inf')
 NEGATIVE_INFINITY = float('-inf')
 NAN = float('nan')
 
-if six.PY2:
-  Cmp = cmp
-  NoneType = types.NoneType
-  TypeType = types.TypeType
-else:
-  Cmp = lambda a, b: (a > b) - (a < b)
-  NoneType = type(None)
-  TypeType = type
+Cmp = cmp if six.PY2 else lambda a, b: (a > b) - (a < b)
 
 
 class TruthAssertionError(AssertionError):
@@ -173,8 +165,8 @@ def AssertThat(target):
     A subject appropriate for the target.
   """
 
-  # All types descend from TypeType, so check if target is a type itself first.
-  if type(target) is TypeType:
+  # All types descend from "type", so check if target is a type itself first.
+  if type(target) is type:
     if issubclass(target, BaseException):
       return _ExceptionClassSubject(target)
     return _ClassSubject(target)
@@ -1313,13 +1305,13 @@ _TYPE_CONSTRUCTORS = {
     bool: _BooleanSubject,
     collections.Mapping: _DictionarySubject,
     mock.NonCallableMock: _MockSubject,
-    NoneType: _NoneSubject
+    type(None): _NoneSubject
 }
 for t in six.string_types:
   _TYPE_CONSTRUCTORS[t] = _StringSubject
 for t in six.class_types:
   if t is not type:
-    _TYPE_CONSTRUCTORS[types.ClassType] = _ClassSubject
+    _TYPE_CONSTRUCTORS[t] = _ClassSubject
 
 
 atexit.register(_EmptySubject._CheckUnresolved)

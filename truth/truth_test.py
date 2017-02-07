@@ -1342,7 +1342,7 @@ class NoneSubjectTest(BaseTest):
     s.IsAnyOf(5, None, 'six')
     s.IsNoneOf()
     s.IsNoneOf(5, 'six')
-    s.IsInstanceOf(truth.NoneType)
+    s.IsInstanceOf(type(None))
     s.IsNotInstanceOf(int)
     s.IsSameAs(None)
     s.IsNotSameAs(0)
@@ -1386,7 +1386,7 @@ class NoneSubjectTest(BaseTest):
                       'NoneType'):
       s.IsInstanceOf(int)
     with self.Failure('expected not to be an instance of', 'NoneType'):
-      s.IsNotInstanceOf(truth.NoneType)
+      s.IsNotInstanceOf(type(None))
     with self.Failure('is the same instance as <0>'):
       s.IsSameAs(0)
     with self.Failure('is not the same instance as <None>'):
@@ -1422,7 +1422,7 @@ class NoneSubjectTest(BaseTest):
         'HasArgsThat': (),
 
         # ClassSubject.
-        'IsSubclassOf': (truth.NoneType,),
+        'IsSubclassOf': (type(None),),
 
         # IterableSubject.
         'HasSize': (1,),

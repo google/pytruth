@@ -138,12 +138,10 @@ POSITIVE_INFINITY = float('inf')
 NEGATIVE_INFINITY = float('-inf')
 NAN = float('nan')
 
-# Python 2/3 compatibility.
-_PYTHON2 = sys.version_info.major < 3
-Cmp = cmp if _PYTHON2 else lambda a, b: (a > b) - (a < b)
-NoneType = types.NoneType if _PYTHON2 else type(None)
-TypeType = types.TypeType if _PYTHON2 else type
-Range = xrange if _PYTHON2 else range
+Cmp = cmp if six.PY2 else lambda a, b: (a > b) - (a < b)
+NoneType = types.NoneType if six.PY2 else type(None)
+TypeType = types.TypeType if six.PY2 else type
+Range = xrange if six.PY2 else range
 
 
 class TruthAssertionError(AssertionError):
@@ -526,7 +524,7 @@ class _ExceptionSubject(_DefaultSubject, _UnresolvedContextMixin):
     Returns:
       String
     """
-    if _PYTHON2:
+    if six.PY2:
       return self._actual.message
     return self._actual.args[0] if self._actual.args else ''
 
@@ -608,7 +606,7 @@ class _ComparableSubject(_DefaultSubject):
       self._FailComparingValues('is less than', other)
 
   def _CheckNone(self, proposition, other):
-    if other is None and not _PYTHON2:
+    if other is None and not six.PY2:
       raise InvalidAssertionError(
           'It is illegal to compare using {0}({1})'.format(proposition, None))
 
@@ -1292,7 +1290,7 @@ class _NoneSubject(
     if (name.startswith('_') or
         name[0] == name[0].lower() or
         hasattr(_BooleanSubject, name) or
-        (_PYTHON2 and
+        (six.PY2 and
          hasattr(_NumericSubject, name) and
          name not in ('IsWithin', 'IsNotWithin'))):
       return object.__getattribute__(self, name)

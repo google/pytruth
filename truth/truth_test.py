@@ -29,16 +29,15 @@ from mock import mock
 import truth
 
 
-PYTHON2 = truth._PYTHON2
-TYPE_WORD = 'type' if PYTHON2 else 'class'
+TYPE_WORD = 'type' if six.PY2 else 'class'
 
 
 def Buffer(s):
-  return buffer(s) if PYTHON2 else memoryview(bytearray(s, 'ascii'))
+  return buffer(s) if six.PY2 else memoryview(bytearray(s, 'ascii'))
 
 
 def Long(i):
-  return long(i) if PYTHON2 else i
+  return long(i) if six.PY2 else i
 
 
 class TestClass(object):
@@ -225,7 +224,7 @@ class IsComparableTest(unittest.TestCase):
     self.assertTrue(truth._IsComparable(True))
 
   def testNotComparable(self):
-    if PYTHON2:
+    if six.PY2:
       self.assertFalse(truth._IsComparable(Buffer('')))
 
   @mock.patch('time.time')
@@ -560,7 +559,7 @@ class ExceptionSubjectTest(BaseTest):
     with s.IsRaised():
       raise ValueError('error text')
 
-    if PYTHON2:
+    if six.PY2:
       with self.Failure("is equal to <'error text'>"):
         with s.IsRaised():
           raise ValueError('other text')
@@ -570,7 +569,7 @@ class ExceptionSubjectTest(BaseTest):
         with s.IsRaised():
           raise ValueError('other text')
 
-    if PYTHON2:
+    if six.PY2:
       with self.Failure("is equal to <'error text'>"):
         with s.IsRaised():
           raise ValueError('error text', 234)
@@ -591,7 +590,7 @@ class ExceptionSubjectTest(BaseTest):
     with s.IsRaised():
       raise ValueError('error text', 123)
 
-    if PYTHON2:
+    if six.PY2:
       with self.Failure("is equal to <''>"):
         with s.IsRaised():
           raise ValueError('other text')
@@ -718,7 +717,7 @@ class ComparableSubjectTest(BaseTest):
     with self.Failure('is less than <3>'):
       s.IsLessThan(3)
 
-  @mock.patch.object(truth, '_PYTHON2', new=False)
+  @mock.patch.object(six, 'PY2', new=False)
   def testPython3CannotCompareToNone(self):
     s = truth._ComparableSubject(5)
     with self.Failure('illegal to compare', 'IsAtLeast'):
@@ -1351,7 +1350,7 @@ class NoneSubjectTest(BaseTest):
     s.IsNotCallable()
 
     # ComparableSubject.
-    if PYTHON2:
+    if six.PY2:
       s.IsAtLeast(None)
       s.IsAtMost(None)
 
@@ -1398,7 +1397,7 @@ class NoneSubjectTest(BaseTest):
       s.IsCallable()
 
     # ComparableSubject.
-    if PYTHON2:
+    if six.PY2:
       with self.Failure('is at least <0>'):
         s.IsAtLeast(0)
       # s.IsAtMost(...) will always succeed, because None is less than
@@ -1474,7 +1473,7 @@ class NoneSubjectTest(BaseTest):
         # above subjects would have already derailed the assertion train.
     })
 
-  @mock.patch.object(truth, '_PYTHON2', new=False)
+  @mock.patch.object(six, 'PY2', new=False)
   def testPython3InequalityFailure(self):
     self.s = truth._NoneSubject(None)
     self.AssertInvalidOperations({

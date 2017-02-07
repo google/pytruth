@@ -172,7 +172,7 @@ class AssertThatTest(BaseTest):
     self.AssertSubject(io.StringIO(u'buffer'), truth._IterableSubject)
     self.AssertSubject(reversed([1, 2]), truth._IterableSubject)
     self.AssertSubject(sorted([1, 2]), truth._IterableSubject)
-    self.AssertSubject(truth.Range(10), truth._IterableSubject)
+    self.AssertSubject(six.moves.xrange(10), truth._IterableSubject)
 
   def testDefaultSubject(self):
     self.AssertSubject(lambda: None, truth._DefaultSubject)
@@ -1496,8 +1496,8 @@ class TypeConstructorTest(unittest.TestCase):
 
   def testAssertNoKeyIsASubclassOfAnother(self):
     keys = list(truth._TYPE_CONSTRUCTORS.keys())
-    for k1 in truth.Range(len(keys) - 1):
-      for k2 in truth.Range(k1 + 1, len(keys)):
+    for k1 in six.moves.xrange(len(keys) - 1):
+      for k2 in six.moves.xrange(k1 + 1, len(keys)):
         self.assertNotIsInstance(keys[k1], keys[k2])
         self.assertNotIsInstance(keys[k2], keys[k1])
 

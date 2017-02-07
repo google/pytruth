@@ -123,7 +123,6 @@ import math
 import numbers
 import re
 import six
-import sys
 import threading
 import types
 
@@ -138,10 +137,14 @@ POSITIVE_INFINITY = float('inf')
 NEGATIVE_INFINITY = float('-inf')
 NAN = float('nan')
 
-Cmp = cmp if six.PY2 else lambda a, b: (a > b) - (a < b)
-NoneType = types.NoneType if six.PY2 else type(None)
-TypeType = types.TypeType if six.PY2 else type
-Range = xrange if six.PY2 else range
+if six.PY2:
+  Cmp = cmp
+  NoneType = types.NoneType
+  TypeType = types.TypeType
+else:
+  Cmp = lambda a, b: (a > b) - (a < b)
+  NoneType = type(None)
+  TypeType = type
 
 
 class TruthAssertionError(AssertionError):
@@ -730,7 +733,7 @@ class _IterableSubject(_DefaultSubject):
       try:
         index = actual_list.index(i)
         # Drain all the elements before that element into actual_not_in_order.
-        for _ in Range(index):
+        for _ in six.moves.xrange(index):
           actual_not_in_order.add(actual_list.pop(0))
         # And remove the element from the actual_list.
         actual_list.pop(0)
@@ -1043,7 +1046,7 @@ class _DictionarySubject(_ComparableIterableSubject):
           ' (i.e., the number of key/value parameters ({0}) must be even).'
           .format(len(items)))
     expected = collections.OrderedDict()
-    for i in Range(0, len(items), 2):
+    for i in six.moves.xrange(0, len(items), 2):
       expected[items[i]] = items[i + 1]
     return self.ContainsExactlyItemsIn(expected)
 

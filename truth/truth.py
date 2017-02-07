@@ -122,6 +122,7 @@ import inspect
 import math
 import numbers
 import re
+import six
 import sys
 import threading
 import types
@@ -139,9 +140,7 @@ NAN = float('nan')
 
 # Python 2/3 compatibility.
 _PYTHON2 = sys.version_info.major < 3
-BaseString = basestring if _PYTHON2 else str
 Cmp = cmp if _PYTHON2 else lambda a, b: (a > b) - (a < b)
-ItemsOf = lambda d: d.iteritems() if _PYTHON2 else d.items()
 NoneType = types.NoneType if _PYTHON2 else type(None)
 TypeType = types.TypeType if _PYTHON2 else type
 Range = xrange if _PYTHON2 else range
@@ -179,7 +178,7 @@ def AssertThat(target):
       return _ExceptionClassSubject(target)
     return _ClassSubject(target)
 
-  for super_type, subject_class in ItemsOf(_TYPE_CONSTRUCTORS):
+  for super_type, subject_class in six.iteritems(_TYPE_CONSTRUCTORS):
     # Must use issubclass() and not isinstance(), because mocked functions
     # override their __class__. See mock._is_instance().
     if issubclass(type(target), super_type):
@@ -918,7 +917,7 @@ class _IterableSubject(_DefaultSubject):
 
   def _CountDuplicates(self, missing):
     missed_list = []
-    for item, count in ItemsOf(missing):
+    for item, count in six.iteritems(missing):
       if count == 1:
         missed_list.append('{0!r}'.format(item))
       else:
@@ -1023,7 +1022,7 @@ class _DictionarySubject(_ComparableIterableSubject):
             .format((key, value), key, self._actual[key]))
 
     other_keys = []
-    for k, v in ItemsOf(self._actual):
+    for k, v in six.iteritems(self._actual):
       if v == value:
         other_keys.append(k)
     if other_keys:
@@ -1309,16 +1308,17 @@ class _NoneSubject(
 # This dictionary must come last because its values are classes defined above.
 _TYPE_CONSTRUCTORS = {
     BaseException: _ExceptionSubject,
-    BaseString: _StringSubject,
     mock.NonCallableMock: _MockSubject,
     bool: _BooleanSubject,
     collections.Mapping: _DictionarySubject,
     mock.NonCallableMock: _MockSubject,
     NoneType: _NoneSubject
 }
-if _PYTHON2:
-  # In Python 3, types.ClassType simply becomes "type".
-  _TYPE_CONSTRUCTORS[types.ClassType] = _ClassSubject
+for t in six.string_types:
+  _TYPE_CONSTRUCTORS[t] = _StringSubject
+for t in six.class_types:
+  if t is not type:
+    _TYPE_CONSTRUCTORS[types.ClassType] = _ClassSubject
 
 
 atexit.register(_EmptySubject._CheckUnresolved)

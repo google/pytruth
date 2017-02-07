@@ -20,6 +20,7 @@ import inspect
 import io
 import os
 import re
+import six
 import unittest
 
 os.environ.setdefault('PBR_VERSION', '1.10.0')
@@ -1486,7 +1487,7 @@ class NoneSubjectTest(BaseTest):
     })
 
   def AssertInvalidOperations(self, operations):
-    for name, args in truth.ItemsOf(operations):
+    for name, args in six.iteritems(operations):
       with self.Failure(
           'Invalid operation on None subject: <{0}>'.format(name)):
         getattr(self.s, name)(*args)

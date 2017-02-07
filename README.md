@@ -150,15 +150,20 @@ Truthy assertion              | Result   | Falsy assertion               | Resul
 `AssertThat(None).IsTruthy()` | fails    | `AssertThat(None).IsFalsy()`  | succeeds
 
 ### Strings
-unittest                        | PyTruth
---------------------------------|---------------------------------------
-`assertEqual(len(s), n)`        | `AssertThat(s).HasLength(n)`
-`assertTrue(s.startswith('a'))` | `AssertThat(s).StartsWith('a')`
-`assertTrue(s.endswith('a'))`   | `AssertThat(s).EndsWith('a')`
-`assertRegex(s, r)`<br>`assertRegexpMatches(s, r)`       | `AssertThat(s).ContainsMatch(r)`
-`assertNotRegex(s, r)`<br>`assertNotRegexpMatches(s, r)` | `AssertThat(s).DoesNotContainMatch(r)`
-`assertRegex(s, '^r')`          | `AssertThat(s).Matches('r')`
-`assertNotRegex(s, '^r')`       | `AssertThat(s).DoesNotMatch('r')`
+unittest                                                       | PyTruth
+---------------------------------------------------------------|---------------------------------------
+`assertEqual(len(s), n)`                                       | `AssertThat(s).HasLength(n)`
+`assertTrue(s.startswith('a'))`                                | `AssertThat(s).StartsWith('a')`
+`assertTrue(s.endswith('a'))`                                  | `AssertThat(s).EndsWith('a')`
+`assertRegex(s, r)`<br>`assertRegexpMatches(s, r)`             | `AssertThat(s).ContainsMatch(r)`
+`assertNotRegex(s, r)`<br>`assertNotRegexpMatches(s, r)`       | `AssertThat(s).DoesNotContainMatch(r)`
+`assertRegex(s, '^r')`<br>`assertRegexpMatches(s, '^r')`       | `AssertThat(s).Matches('r')`
+`assertNotRegex(s, '^r')`<br>`assertNotRegexpMatches(s, '^r')` | `AssertThat(s).DoesNotMatch('r')`
+
+#### Matching strings
+
+The `r` parameter passed to the matching functions may either be a
+`r'raw string'`, or a pattern object returned from `re.compile()`.
 
 ### Numbers, strings, and other comparable things
 unittest                   | PyTruth

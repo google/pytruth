@@ -760,14 +760,18 @@ class _IterableSubject(_DefaultSubject):
       expected: iterable of objects that should be contained in the subject.
 
     Returns:
-      True if the subject contains any of the expected elements.
+      None if the subject contains any of the expected elements.
 
     Raises:
       TruthAssertionError: the subject is missing all of the expected elements.
     """
-    for i in expected:
-      if i in self._actual:
-        return
+    if len(expected) == 1 and expected[0] in self._actual:
+      return
+    if expected:
+      actual_set = set(self._actual)
+      for i in expected:
+        if i in actual_set:
+          return
     self._FailComparingValues(verb, expected)
 
   def _ContainsExactlyElementsIn(self, expected, warn_elements_in=False):
@@ -901,10 +905,29 @@ class _IterableSubject(_DefaultSubject):
     return _InOrder()
 
   def _ContainsNone(self, fail_verb, excluded):
+    """Determines if the subject contains none of the excluded elements.
+
+    Helper function for ContainsNoneIn() and ContainsNoneOf().
+
+    Args:
+      fail_verb: string describing how the excluded elements should be excluded.
+      excluded: iterable of objects that should not be contained in the subject.
+
+    Returns:
+      None if the subject contains none of the expected elements.
+
+    Raises:
+      TruthAssertionError: the subject contains any of the excluded elements.
+    """
     present = []
-    for i in excluded:
-      if i in self._actual:
-        present.append(i)
+    if len(excluded) == 1:
+      if excluded[0] in self._actual:
+        present.extend(excluded)
+    elif excluded:
+      actual_set = set(self._actual)
+      for i in excluded:
+        if i in actual_set:
+          present.append(i)
     if present:
       self._FailWithBadResults(fail_verb, excluded, 'contains', present)
 

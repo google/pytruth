@@ -1012,7 +1012,7 @@ class DictionarySubjectTest(BaseTest):
         "missing <[(5, 'five')]>"):
       s.ContainsExactly(2, 'two', 4, 'four', 5, 'five')
 
-  def testContainsExactlyPassingOddNumberOfKeys(self):
+  def testContainsExactlyPassingOddNumberOfArgs(self):
     s = truth._DictionarySubject({})
     with self.AssertRaisesRegex(ValueError, r'parameters \(3\) must be even'):
       s.ContainsExactly('key1', 'value1', 'key2')
@@ -1024,6 +1024,23 @@ class DictionarySubjectTest(BaseTest):
     s = truth._DictionarySubject(d1)
     self.assertIsInstance(s.ContainsExactlyItemsIn(d2), truth._InOrder)
     self.assertIsInstance(s.ContainsExactlyItemsIn(d3), truth._NotInOrder)
+
+    with self.Failure(
+        "contains exactly <((2, 'two'),)>",
+        "has unexpected items <[(4, 'four')]>",
+        'often not the correct thing to do'):
+      s.ContainsExactlyItemsIn({2: 'two'})
+
+    with self.Failure(
+        "contains exactly <((2, 'two'), (4, 'for'))>",
+        "missing <[(4, 'for')]>",
+        "has unexpected items <[(4, 'four')]>"):
+      s.ContainsExactlyItemsIn({2: 'two', 4: 'for'})
+
+    with self.Failure(
+        "contains exactly <((2, 'two'), (4, 'four'), (5, 'five'))>",
+        "missing <[(5, 'five')]>"):
+      s.ContainsExactlyItemsIn({2: 'two', 4: 'four', 5: 'five'})
 
 
 class NumericSubjectTest(BaseTest):

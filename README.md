@@ -155,8 +155,8 @@ unittest                        | PyTruth
 `assertEqual(len(s), n)`        | `AssertThat(s).HasLength(n)`
 `assertTrue(s.startswith('a'))` | `AssertThat(s).StartsWith('a')`
 `assertTrue(s.endswith('a'))`   | `AssertThat(s).EndsWith('a')`
-`assertRegex(s, r)`             | `AssertThat(s).ContainsMatch(r)`
-`assertNotRegex(s, r)`          | `AssertThat(s).DoesNotContainMatch(r)`
+`assertRegex(s, r)`<br>`assertRegexpMatches(s, r)`       | `AssertThat(s).ContainsMatch(r)`
+`assertNotRegex(s, r)`<br>`assertNotRegexpMatches(s, r)` | `AssertThat(s).DoesNotContainMatch(r)`
 `assertRegex(s, '^r')`          | `AssertThat(s).Matches('r')`
 `assertNotRegex(s, '^r')`       | `AssertThat(s).DoesNotMatch('r')`
 
@@ -191,28 +191,36 @@ unittest                        | PyTruth
 `assertNotIn(b, a)`             | `AssertThat(a).DoesNotContain(b)`
 `assertTrue(b in a and c in a)` | `AssertThat(a).ContainsAllOf(b, c)`<br>`AssertThat(a).ContainsAllIn([b, c])`
 `assertTrue(b in a or c in a)`  | `AssertThat(a).ContainsAnyOf(b, c)`<br>`AssertThat(a).ContainsAnyIn([b, c])`
-`assertTrue(b in a and c in a and len(a) == 2)` | `AssertThat(a).ContainsExactly(b, c)`
-`assertCountEqual(a, b)`        | `AssertThat(a).ContainsExactlyElementsIn(b)`
-`assertTrue(b not in a and c not in a)` | `AssertThat(a).ContainsNoneOf(b, c)`<br>`AssertThat(a).ContainsNoneIn([b, c])`
+`assertTrue(b in a and c in a and len(a) == 2)`      | `AssertThat(a).ContainsExactly(b, c)`
+`assertCountEqual(a, b)`<br>`assertItemsEqual(a, b)` | `AssertThat(a).ContainsExactlyElementsIn(b)`
+`assertTrue(b not in a and c not in a)`              | `AssertThat(a).ContainsNoneOf(b, c)`<br>`AssertThat(a).ContainsNoneIn([b, c])`
 N/A                             | `AssertThat(a).ContainsNoDuplicates()`
 N/A                             | `AssertThat(a).IsOrdered()`
 N/A                             | `AssertThat(a).IsOrderedAccordingTo(cf)`
 N/A                             | `AssertThat(a).IsStrictlyOrdered()`
 N/A                             | `AssertThat(a).IsStrictlyOrderedAccordingTo(cf)`
 
-#### Ordering
+#### Defining order
 
 The `cf` parameter passed to `IsOrderedAccordingTo()` and
 `IsStrictlyOrderedAccordingTo()` should be a callable that follows the contract
 of `cmp(x, y)`: it should return negative if x < y, zero if x == y,
 and positive if x > y.
 
+*Ordered* means that the iterable's elements must increase (or decrease,
+depending on `cf`) from beginning to end. Adjacent elements are allowed to be
+equal. *Strictly ordered* means that in addition, the elements must be unique
+(*i.e.*, monotonically increasing or decreasing).
+
 `IsOrdered()` is equivalent to `IsOrderedAccordingTo(cmp)`.
 
 `IsStrictlyOrdered()` is equivalent to `IsStrictlyOrderedAccordingTo(cmp)`.
 
-The `ContainsAll...`  and `ContainsExactly...` predicates may be further
-predicated with `InOrder()`.
+#### Asserting order
+
+By default, `ContainsAll...` and `ContainsExactly...` do not enforce that the
+order of the elements in the subject under test matches the that of the expected
+value. To do that, append `InOrder()` to the returned predicate.
 
 Containment assertion                                      | Result
 -----------------------------------------------------------|---------
@@ -237,6 +245,7 @@ unittest                           | PyTruth
 `assertNotIn((k, v), d.items())`   | `AssertThat(d).DoesNotContainItem(k, v)`
 `assertEqual(d, {k1: v1, k2: v2})` | `AssertThat(d).ContainsExactly(k1, v1, k2, v2)`
 `assertEqual(d1, d2)`              | `AssertThat(d1).ContainsExactlyItemsIn(d2)`
+`assertDictContainsSubset(d1, d2)` | `AssertThat(d1.items()).ContainsAllIn(d2.items())`
 
 ### Exceptions
 unittest                                | PyTruth
@@ -247,16 +256,37 @@ unittest                                | PyTruth
 `assertTrue(e.message.startswith('a'))` | `AssertThat(e).HasMessageThat().StartsWith('a')`
 `assertIn(a, e.args)`                   | `AssertThat(e).HasArgsThat().Contains(a)`
 
+#### Matching raised exceptions
+
+When expecting an exception using the `AssertThat(e).IsRaised()` context, any
+exception raised whose type is equal to `e` or a subclass of `e` is accepted.
+If an exception is raised that is not a subclass of `e`, the assertion fails.
+
+The `e` parameter in the `AssertThat(e).IsRaised()` context may be either an
+exception *class* like `ValueError`, or it may be an exception *instance* like
+`ValueError('some error')`. If an instance is passed, then any exception raised
+by the code under test must also have matching `message` and `args` properties,
+in addition to being a subclass of the expected exception.
+
 ### Mocked functions
-unittest                             | PyTruth
--------------------------------------|----------------------------------------------
-`m.assert_called()`                  | `AssertThat(m).WasCalled()`
-`m.assert_not_called()`              | `AssertThat(m).WasNotCalled()`
-`m.assert_called_once()`             | `AssertThat(m).WasCalled().Once()`
-`m.assert_called_with(*a, **k)`      | `AssertThat(m).WasCalled().LastWith(*a, **k)`
-`m.assert_called_once_with(*a, **k)` | `AssertThat(m).WasCalled().Once().With(*a, **k)` `AssertThat(m).WasCalled().With(*a, **k).Once()`
-<nobr>`m.assert_has_calls(calls, any_order=bool)`</nobr> | `AssertThat(m).HasCalls(calls, any_order=bool)`
-`m.assert_any_call(*a, **k)`         | `AssertThat(m).WasCalled().With(*a, **k)`
+unittest                                           | PyTruth
+---------------------------------------------------|-------------------------------------------------
+`m.assert_called()`                                | `AssertThat(m).WasCalled()`
+`m.assert_not_called()`                            | `AssertThat(m).WasNotCalled()`
+`m.assert_called_once()`                           | `AssertThat(m).WasCalled().Once()`
+`m.assert_called_with(*a, **k)`                    | `AssertThat(m).WasCalled().LastWith(*a, **k)`
+`m.assert_called_once_with(*a, **k)`               | `AssertThat(m).WasCalled().Once().With(*a, **k)` `AssertThat(m).WasCalled().With(*a, **k).Once()`
+`m.assert_has_calls(calls,`&nbsp;`any_order=bool)` | `AssertThat(m).HasCalls(calls, any_order=bool)`
+`m.assert_any_call(*a, **k)`                       | `AssertThat(m).WasCalled().With(*a, **k)`
+
+#### Being called once, with arguments
+
+The `WasCalled().Once().With(...)` and `WasCalled().With(...).Once()` assertions
+are equivalent, and they assert that the function was called one time ever,
+and that one time it was called, it was passed those arguments.
+The underlying mock library is incapable of asserting a different English
+interpretation wherein the function was passed those arguments exactly once,
+but is permitted to have been called with other, irrelevant arguments.
 
 ### Classes
 unittest                      | PyTruth

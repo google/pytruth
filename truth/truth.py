@@ -1301,7 +1301,6 @@ class _NoneSubject(
 # This dictionary must come last because its values are classes defined above.
 _TYPE_CONSTRUCTORS = {
     BaseException: _ExceptionSubject,
-    mock.NonCallableMock: _MockSubject,
     bool: _BooleanSubject,
     collections.Mapping: _DictionarySubject,
     mock.NonCallableMock: _MockSubject,

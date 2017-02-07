@@ -1498,8 +1498,12 @@ class TypeConstructorTest(unittest.TestCase):
     keys = list(truth._TYPE_CONSTRUCTORS.keys())
     for k1 in six.moves.xrange(len(keys) - 1):
       for k2 in six.moves.xrange(k1 + 1, len(keys)):
-        self.assertNotIsInstance(keys[k1], keys[k2])
-        self.assertNotIsInstance(keys[k2], keys[k1])
+        self.assertFalse(
+            issubclass(keys[k1], keys[k2]),
+            msg='{0} is a subclass of {1}'.format(keys[k1], keys[k2]))
+        self.assertFalse(
+            issubclass(keys[k2], keys[k1]),
+            msg='{0} is a subclass of {1}'.format(keys[k2], keys[k1]))
 
 
 if __name__ == '__main__':

@@ -606,6 +606,82 @@ class _ComparableSubject(_DefaultSubject):
           'It is illegal to compare using {0}({1})'.format(proposition, None))
 
 
+class _DuplicateCounter(object):
+  """A synchronized collection of counters for tracking duplicates.
+
+  The count values may be modified only through Increment() and Decrement(),
+  which increment and decrement by 1 (only). If a count ever becomes 0, the item
+  is immediately expunged from the dictionary. Counts can never be negative;
+  attempting to Decrement an absent key has no effect.
+
+  Implements some dictionary methods: len(d) and "k in d" are supported.
+
+  Order is preserved so that error messages containing expected values match.
+
+  This class is threadsafe. It doesn't have to be, but it should be, so it is.
+  """
+
+  def __init__(self):
+    self._d = collections.OrderedDict()
+    self._lock = threading.Lock()
+
+  def __contains__(self, key):
+    with self._lock:
+      return key in self._d
+
+  def __len__(self):
+    with self._lock:
+      return len(self._d)
+
+  def __str__(self):
+    """Returns the string representation of the duplicate counts.
+
+    Items occuring more than once are accompanied by their count.
+    Otherwise the count is implied to be 1.
+
+    For example, if the internal dict is {2: 1, 3: 4, 'abc': 1}, this returns
+    the string "[{2, 3 [4 copies], 'abc'}]".
+
+    Returns:
+      String, the counts of duplicate items.
+    """
+    duplicates = []
+    with self._lock:
+      for item, count in six.iteritems(self._d):
+        if count == 1:
+          duplicates.append('{0!r}'.format(item))
+        else:
+          duplicates.append('{0!r} [{1} copies]'.format(item, count))
+    return '[{0}]'.format(', '.join(duplicates))
+
+  def Increment(self, key):
+    """Atomically increment a count by 1. Insert the item if not present.
+
+    Args:
+      key: the key being counted.
+    """
+    with self._lock:
+      if key in self._d:
+        self._d[key] += 1
+      else:
+        self._d[key] = 1
+
+  def Decrement(self, key):
+    """Atomically decrement a count by 1. Expunge the item if the count is 0.
+
+    If the item is not present, has no effect.
+
+    Args:
+      key: the key being counted.
+    """
+    with self._lock:
+      if key in self._d:
+        if self._d[key] > 1:
+          self._d[key] -= 1
+        else:
+          del self._d[key]
+
+
 class _IterableSubject(_DefaultSubject):
   """Subject for things that are iterable.
 
@@ -716,7 +792,7 @@ class _IterableSubject(_DefaultSubject):
       TruthAssertionError: the subject is missing any of the expected elements.
     """
     actual_list = list(self._actual)
-    missing = collections.OrderedDict()
+    missing = _DuplicateCounter()
     actual_not_in_order = set()
     ordered = True
 
@@ -736,13 +812,11 @@ class _IterableSubject(_DefaultSubject):
           ordered = False
         except KeyError:
           # It is not in actual_not_in_order, we're missing an expected element.
-          missing.setdefault(i, 0)
-          missing[i] += 1
+          missing.Increment(i)
 
     # If we have any missing expected elements, fail.
     if missing:
-      self._FailWithBadResults(
-          verb, expected, 'is missing', self._CountDuplicates(missing))
+      self._FailWithBadResults(verb, expected, 'is missing', missing)
 
     if ordered:
       return _InOrder()
@@ -765,8 +839,12 @@ class _IterableSubject(_DefaultSubject):
     Raises:
       TruthAssertionError: the subject is missing all of the expected elements.
     """
+    # Optimize for space when there is exactly 1 expected element.
     if len(expected) == 1 and expected[0] in self._actual:
       return
+
+    # Otherwise we know we have to check "in" self._actual at least twice,
+    # so optimize for time by converting it to a set first.
     if expected:
       actual_set = set(self._actual)
       for i in expected:
@@ -798,8 +876,8 @@ class _IterableSubject(_DefaultSubject):
         self._FailWithProposition('is empty')
       return _InOrder()
 
-    missing = collections.OrderedDict()
-    extra = collections.OrderedDict()
+    missing = _DuplicateCounter()
+    extra = _DuplicateCounter()
     actual_iter = iter(self._actual)
     expected_iter = iter(expected)
 
@@ -820,7 +898,7 @@ class _IterableSubject(_DefaultSubject):
       try:
         expected_element = next(expected_iter)
       except StopIteration:
-        extra[actual_element] = 1
+        extra.Increment(actual_element)
         break
 
       # As soon as we encounter a pair of elements that differ, we know that
@@ -829,27 +907,21 @@ class _IterableSubject(_DefaultSubject):
       # over were equal, they have no effect on the result now.
       if actual_element != expected_element:
         # Missing elements; elements that are not missing will be removed.
-        missing[expected_element] = 1
+        missing.Increment(expected_element)
         for m in expected_iter:
-          missing.setdefault(m, 0)
-          missing[m] += 1
+          missing.Increment(m)
 
         # Remove all actual elements from missing, and add any that weren't
         # in missing to extra.
         if actual_element in missing:
-          missing[actual_element] -= 1
-          if not missing[actual_element]:
-            del missing[actual_element]
+          missing.Decrement(actual_element)
         else:
-          extra[actual_element] = 1
+          extra.Increment(actual_element)
         for e in actual_iter:
           if e in missing:
-            missing[e] -= 1
-            if not missing[e]:
-              del missing[e]
+            missing.Decrement(e)
           else:
-            extra.setdefault(e, 0)
-            extra[e] += 1
+            extra.Increment(e)
 
         # Fail if there are either missing or extra elements.
 
@@ -859,20 +931,15 @@ class _IterableSubject(_DefaultSubject):
             self._FailWithProposition(
                 'contains exactly <{0!r}>.'
                 ' It is missing <{1}> and has unexpected items <{2}>'
-                .format(
-                    expected,
-                    self._CountDuplicates(missing),
-                    self._CountDuplicates(extra)),
+                .format(expected, missing, extra),
                 suffix=warning)
           else:
             self._FailWithBadResults(
-                'contains exactly', expected,
-                'is missing', self._CountDuplicates(missing),
+                'contains exactly', expected, 'is missing', missing,
                 suffix=warning)
         if extra:
           self._FailWithBadResults(
-              'contains exactly', expected,
-              'has unexpected items', self._CountDuplicates(extra),
+              'contains exactly', expected, 'has unexpected items', extra,
               suffix=warning)
 
         # The iterables were not in the same order, InOrder() can just fail.
@@ -883,21 +950,17 @@ class _IterableSubject(_DefaultSubject):
     # pairs of elements that differ. If the actual iterator still has elements,
     # they're extras. If the required iterator has elements, they're missing.
     for e in actual_iter:
-      extra.setdefault(e, 0)
-      extra[e] += 1
+      extra.Increment(e)
     if extra:
       self._FailWithBadResults(
-          'contains exactly', expected,
-          'has unexpected items', self._CountDuplicates(extra),
+          'contains exactly', expected, 'has unexpected items', extra,
           suffix=warning)
 
     for m in expected_iter:
-      missing.setdefault(m, 0)
-      missing[m] += 1
+      missing.Increment(m)
     if missing:
       self._FailWithBadResults(
-          'contains exactly', expected,
-          'is missing', self._CountDuplicates(missing),
+          'contains exactly', expected, 'is missing', missing,
           suffix=warning)
 
     # If neither iterator has elements, we reached the end and the elements
@@ -920,9 +983,13 @@ class _IterableSubject(_DefaultSubject):
       TruthAssertionError: the subject contains any of the excluded elements.
     """
     present = []
+    # Optimize for space when there is exactly 1 excluded element.
     if len(excluded) == 1:
       if excluded[0] in self._actual:
         present.extend(excluded)
+
+    # Otherwise we know we have to check "in" self._actual at least twice,
+    # so optimize for time by converting it to a set first.
     elif excluded:
       actual_set = set(self._actual)
       for i in excluded:
@@ -930,15 +997,6 @@ class _IterableSubject(_DefaultSubject):
           present.append(i)
     if present:
       self._FailWithBadResults(fail_verb, excluded, 'contains', present)
-
-  def _CountDuplicates(self, missing):
-    missed_list = []
-    for item, count in six.iteritems(missing):
-      if count == 1:
-        missed_list.append('{0!r}'.format(item))
-      else:
-        missed_list.append('{0!r} [{1} copies]'.format(item, count))
-    return '[{0}]'.format(', '.join(missed_list))
 
   def _PairwiseCheck(self, pair_comparator, strict=False):
     i = iter(self._actual)

@@ -730,6 +730,75 @@ class ComparableSubjectTest(BaseTest):
       s.IsLessThan(None)
 
 
+class DuplicateCounterTest(unittest.TestCase):
+
+  def testContains(self):
+    d = truth._DuplicateCounter()      # {}
+    self.assertNotIn('a', d)
+    self.assertNotIn('b', d)
+
+    d.Increment('a')                   # {'a': 1}
+    self.assertIn('a', d)
+    self.assertNotIn('b', d)
+
+    d.Decrement('a')                   # {}
+    self.assertNotIn('a', d)
+    self.assertNotIn('b', d)
+
+  def testEverything(self):
+    # It's much easier to test Increment() and Decrement()'s effects on
+    # len() and str() using an integration test like this.
+    d = truth._DuplicateCounter()      # {}
+    self.assertFalse(d)
+    self.assertEqual(len(d), 0)
+    self.assertEqual(str(d), '[]')
+
+    d.Increment('a')                   # {'a': 1}
+    self.assertTrue(d)
+    self.assertEqual(len(d), 1)
+    self.assertEqual(str(d), "['a']")
+
+    d.Increment('a')                   # {'a': 2}
+    self.assertTrue(d)
+    self.assertEqual(len(d), 1)
+    self.assertEqual(str(d), "['a' [2 copies]]")
+
+    d.Increment('b')                   # {'a': 2, 'b': 1}
+    self.assertTrue(d)
+    self.assertEqual(len(d), 2)
+    self.assertEqual(str(d), "['a' [2 copies], 'b']")
+
+    d.Decrement('a')                   # {'a': 1, 'b': 1}
+    self.assertTrue(d)
+    self.assertEqual(len(d), 2)
+    self.assertEqual(str(d), "['a', 'b']")
+
+    d.Decrement('a')                   # {'b': 1}
+    self.assertTrue(d)
+    self.assertEqual(len(d), 1)
+    self.assertEqual(str(d), "['b']")
+
+    d.Increment('a')                   # {'b': 1, 'a': 1}
+    self.assertTrue(d)
+    self.assertEqual(len(d), 2)
+    self.assertEqual(str(d), "['b', 'a']")
+
+    d.Decrement('a')                   # {'b': 1}
+    self.assertTrue(d)
+    self.assertEqual(len(d), 1)
+    self.assertEqual(str(d), "['b']")
+
+    d.Decrement('b')                   # {}
+    self.assertFalse(d)
+    self.assertEqual(len(d), 0)
+    self.assertEqual(str(d), '[]')
+
+    d.Decrement('a')                   # {}
+    self.assertFalse(d)
+    self.assertEqual(len(d), 0)
+    self.assertEqual(str(d), '[]')
+
+
 class IterableSubjectTest(BaseTest):
 
   def testHasSize(self):

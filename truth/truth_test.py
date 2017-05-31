@@ -1387,6 +1387,20 @@ class MockCalledSubjectTest(BaseTest):
       s.Once()
 
   @mock.patch('time.sleep')
+  def testTimes(self, mock_sleep):
+    s = truth._MockCalledSubject(mock_sleep)
+    with self.Failure():
+      s.Times(2)
+    mock_sleep(10)
+    with self.Failure():
+      s.Times(2)
+    mock_sleep(10)
+    s.Times(2)
+    mock_sleep(10)
+    with self.Failure():
+      s.Times(2)
+
+  @mock.patch('time.sleep')
   def testWith(self, mock_sleep):
     s = truth._MockCalledSubject(mock_sleep)
     with self.Failure():

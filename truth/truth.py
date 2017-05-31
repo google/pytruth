@@ -1319,6 +1319,14 @@ class _MockCalledSubject(_MockAssertionConverter):
       self._actual.assert_called_once()
     return self
 
+  def Times(self, expected):
+    if self._actual.call_count != expected:
+      name = self._actual._mock_name or 'mock'
+      self._Fail(
+          "Expected '{0}' to have been called {1} times. Called {2} times."
+          .format(name, expected, self._actual.call_count))
+    return self
+
   def With(self, *args, **kwargs):
     with self._WrapMockAssertions():
       self._actual.assert_any_call(*args, **kwargs)

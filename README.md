@@ -279,6 +279,7 @@ unittest                                           | PyTruth
 `m.assert_called()`                                | `AssertThat(m).WasCalled()`
 `m.assert_not_called()`                            | `AssertThat(m).WasNotCalled()`
 `m.assert_called_once()`                           | `AssertThat(m).WasCalled().Once()`
+`assertEqual(m.call_count, n)`                     | `AssertThat(m).WasCalled().Times(n)`
 `m.assert_called_with(*a, **k)`                    | `AssertThat(m).WasCalled().LastWith(*a, **k)`
 `m.assert_called_once_with(*a, **k)`               | `AssertThat(m).WasCalled().Once().With(*a, **k)` `AssertThat(m).WasCalled().With(*a, **k).Once()`
 `m.assert_has_calls(calls,`&nbsp;`any_order=bool)` | `AssertThat(m).HasCalls(calls, any_order=bool)`

@@ -35,6 +35,16 @@ before creating pull requests.
 
 ## Support
 
+PyTruth is not an actively maintained project. No support is provided.
+
+It is shared with the community to bring an expressive, consistent assertion
+style to projects that may be using a combination of
+[unittest](https://docs.python.org/3/library/unittest.html),
+[googletest](https://github.com/google/googletest),
+[mox](https://pypi.python.org/pypi/mox), and
+[mock](https://docs.python.org/3/library/unittest.mock.html)&mdash;especially
+to people familiar with [Java Truth](https://github.com/google/truth).
+
 User group:
 [pytruth-users@googlegroups.com](https://groups.google.com/d/forum/pytruth-users)
 

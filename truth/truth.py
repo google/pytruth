@@ -118,9 +118,11 @@ If you discover a concurrency bug, please report it or fix it.
 import atexit
 import collections
 import contextlib
+import imp
 import inspect
 import math
 import numbers
+import os
 import re
 import six
 import threading
@@ -137,6 +139,19 @@ NEGATIVE_INFINITY = float('-inf')
 NAN = float('nan')
 
 Cmp = cmp if six.PY2 else lambda a, b: (a > b) - (a < b)
+
+
+# Make a copy of all members of <os> and <os.path>, and inject them into the
+# inspect module's import of <os>. This prevents mocked versions of their
+# functions from being called when subjects are instantiated, allowing multiple
+# assertions to execute in parallel safely. We can't simply stub inspect.os or
+# inspect.os.path alone, because they are references to module singletons.
+inspect.os = imp.new_module('os_for_inspect')
+for os_key in dir(os):
+  setattr(inspect.os, os_key, getattr(os, os_key))
+inspect.os.path = imp.new_module('os_path_for_inspect')
+for path_key in dir(os.path):
+  setattr(inspect.os.path, path_key, getattr(os.path, path_key))
 
 
 class TruthAssertionError(AssertionError):

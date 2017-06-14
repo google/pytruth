@@ -351,6 +351,10 @@ class EmptySubjectTest(BaseTest, AllowUnresolvedSubjects):
     with self.Failure('message'):
       s._Fail('message')
 
+  @mock.patch.object(os.path, 'exists', side_effect=ValueError('mock called'))
+  def testInitWithMockedOsPathExists(self, unused_mock_exists):
+    truth._EmptySubject(None)
+
 
 class DefaultSubjectTest(BaseTest):
 

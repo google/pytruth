@@ -53,6 +53,22 @@ class TestChildClass(TestClass):
   """Test child class."""
 
 
+class TestComparableClass(object):
+  """Test class that implements the Comparable interface, only."""
+
+  def __lt__(self, other):
+    pass
+
+  def __le__(self, other):
+    pass
+
+  def __gt__(self, other):
+    pass
+
+  def __ge__(self, other):
+    pass
+
+
 class TestMappingClass(collections.Mapping):
   """Test class that implements the Mapping interface."""
 
@@ -152,16 +168,19 @@ class AssertThatTest(BaseTest):
     self.AssertSubject(collections.deque(), truth._ComparableIterableSubject)
 
   def testComparableSubject(self):
-    self.AssertSubject(-5, truth._ComparableSubject)
-    self.AssertSubject(0, truth._ComparableSubject)
-    self.AssertSubject(1, truth._ComparableSubject)
-    self.AssertSubject(5, truth._ComparableSubject)
-    self.AssertSubject(Long(5), truth._ComparableSubject)
-    self.AssertSubject(5.5, truth._ComparableSubject)
-    self.AssertSubject(complex(3, 4), truth._ComparableSubject)
-    self.AssertSubject(truth.POSITIVE_INFINITY, truth._ComparableSubject)
-    self.AssertSubject(truth.NEGATIVE_INFINITY, truth._ComparableSubject)
-    self.AssertSubject(truth.NAN, truth._ComparableSubject)
+    self.AssertSubject(TestComparableClass(), truth._ComparableSubject)
+
+  def testNumericSubject(self):
+    self.AssertSubject(-5, truth._NumericSubject)
+    self.AssertSubject(0, truth._NumericSubject)
+    self.AssertSubject(1, truth._NumericSubject)
+    self.AssertSubject(5, truth._NumericSubject)
+    self.AssertSubject(Long(5), truth._NumericSubject)
+    self.AssertSubject(5.5, truth._NumericSubject)
+    self.AssertSubject(complex(3, 4), truth._NumericSubject)
+    self.AssertSubject(truth.POSITIVE_INFINITY, truth._NumericSubject)
+    self.AssertSubject(truth.NEGATIVE_INFINITY, truth._NumericSubject)
+    self.AssertSubject(truth.NAN, truth._NumericSubject)
 
   def testIterableSubject(self):
     self.AssertSubject(iter('abc'), truth._IterableSubject)
@@ -354,6 +373,10 @@ class EmptySubjectTest(BaseTest, AllowUnresolvedSubjects):
   @mock.patch.object(os.path, 'exists', side_effect=ValueError('mock called'))
   def testInitWithMockedOsPathExists(self, unused_mock_exists):
     truth._EmptySubject(None)
+
+  def testStrWhenNotCreatedByAssertThat(self):
+    s = truth._EmptySubject('subject')
+    self.assertEqual(str(s), "_EmptySubject(<'subject'>)")
 
 
 class DefaultSubjectTest(BaseTest):
@@ -619,6 +642,16 @@ class ExceptionSubjectTest(BaseTest):
     with self.Failure('forget to call IsRaised'):
       with s:
         pass
+
+  @mock.patch.object(six, 'PY2', new=False)
+  def testPython3GetActualMessageFromEmptyError(self):
+    e = truth._ExceptionSubject(ValueError())
+    self.assertEqual(e._GetActualMessage(), '')
+
+  @mock.patch.object(six, 'PY2', new=False)
+  def testPython3GetActualMessageFromArgs(self):
+    e = truth._ExceptionSubject(ValueError('arg1'))
+    self.assertEqual(e._GetActualMessage(), 'arg1')
 
 
 class BooleanSubjectTest(BaseTest):
@@ -910,8 +943,14 @@ class IterableSubjectTest(BaseTest):
     self.assertIsInstance(s.ContainsExactly(8, 3, 5), truth._NotInOrder)
     with self.Failure('contains exactly', 'is missing <[9]>'):
       s.ContainsExactly(3, 5, 8, 9)
+    with self.Failure('contains exactly', 'is missing <[9, 10]>'):
+      s.ContainsExactly(9, 3, 5, 8, 10)
     with self.Failure('contains exactly', 'has unexpected items <[8]>'):
       s.ContainsExactly(3, 5)
+    with self.Failure('contains exactly', 'has unexpected items <[5]>'):
+      s.ContainsExactly(8, 3)
+    with self.Failure('contains exactly', 'has unexpected items <[5, 8]>'):
+      s.ContainsExactly(3)
     with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
       s.ContainsExactly(4, 4)
     with self.Failure(
@@ -922,6 +961,14 @@ class IterableSubjectTest(BaseTest):
         'is missing <[(3, 5, 8)]>',
         'often not the correct thing to do'):
       s.ContainsExactly((3, 5, 8))
+    with self.Failure('is empty'):
+      s.ContainsExactly()
+
+  def testContainsExactlyEmptyContainer(self):
+    s = truth._IterableSubject(())
+    s.ContainsExactly()
+    with self.Failure('contains exactly', 'is missing <[3]>'):
+      s.ContainsExactly(3)
 
   def testContainsExactlyElementsIn(self):
     s = truth._IterableSubject((3, 5, 8))
@@ -931,13 +978,27 @@ class IterableSubjectTest(BaseTest):
         s.ContainsExactlyElementsIn((8, 3, 5)), truth._NotInOrder)
     with self.Failure('contains exactly', 'is missing <[9]>'):
       s.ContainsExactlyElementsIn((3, 5, 8, 9))
+    with self.Failure('contains exactly', 'is missing <[9, 10]>'):
+      s.ContainsExactlyElementsIn((9, 3, 5, 8, 10))
     with self.Failure('contains exactly', 'has unexpected items <[8]>'):
       s.ContainsExactlyElementsIn((3, 5))
+    with self.Failure('contains exactly', 'has unexpected items <[5]>'):
+      s.ContainsExactlyElementsIn((8, 3))
+    with self.Failure('contains exactly', 'has unexpected items <[5, 8]>'):
+      s.ContainsExactlyElementsIn((3,))
     with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
       s.ContainsExactlyElementsIn((4, 4))
     with self.Failure(
         'contains exactly', 'is missing <[9]>', 'has unexpected items <[8]>'):
       s.ContainsExactlyElementsIn((3, 5, 9))
+    with self.Failure('is empty'):
+      s.ContainsExactlyElementsIn(())
+
+  def testContainsExactlyElementsInEmptyContainer(self):
+    s = truth._IterableSubject(())
+    s.ContainsExactlyElementsIn(())
+    with self.Failure('contains exactly', 'is missing <[3]>'):
+      s.ContainsExactlyElementsIn((3,))
 
   def testContainsNoneIn(self):
     s = truth._IterableSubject((3, 5, 8))
@@ -996,6 +1057,14 @@ class IterableSubjectTest(BaseTest):
       truth._IterableSubject((4, 5)).IsStrictlyOrderedAccordingTo(r)
     with self.Failure('is strictly ordered <(5, 5)>'):
       truth._IterableSubject((5, 5, 3)).IsStrictlyOrderedAccordingTo(r)
+
+
+class OrderedTest(unittest.TestCase):
+
+  def testInOrderNotImplemented(self):
+    ordered = truth._Ordered()
+    with self.assertRaises(NotImplementedError):
+      ordered.InOrder()
 
 
 class InOrderTest(unittest.TestCase):

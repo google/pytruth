@@ -227,12 +227,18 @@ def _IsComparable(target):
 
 def _IsIterable(target):
   """Returns True if the target is iterable."""
-  return isinstance(target, collections.Iterable)
+  try:
+    return isinstance(target, collections.Iterable)
+  except (AttributeError, TypeError):
+    return False
 
 
 def _IsNumeric(target):
   """Returns True if the target is a number."""
-  return isinstance(target, numbers.Number)
+  try:
+    return isinstance(target, numbers.Number)
+  except (AttributeError, TypeError):
+    return False
 
 
 class _EmptySubject(object):
@@ -641,8 +647,9 @@ class _DuplicateCounter(object):
     self._lock = threading.Lock()
 
   def __contains__(self, key):
+    ikey = self.GetKey(key)
     with self._lock:
-      return key in self._d
+      return ikey in self._d
 
   def __len__(self):
     with self._lock:
@@ -675,11 +682,12 @@ class _DuplicateCounter(object):
     Args:
       key: the key being counted.
     """
+    ikey = self.GetKey(key)
     with self._lock:
-      if key in self._d:
-        self._d[key] += 1
+      if ikey in self._d:
+        self._d[ikey] += 1
       else:
-        self._d[key] = 1
+        self._d[ikey] = 1
 
   def Decrement(self, key):
     """Atomically decrement a count by 1. Expunge the item if the count is 0.
@@ -689,12 +697,29 @@ class _DuplicateCounter(object):
     Args:
       key: the key being counted.
     """
+    ikey = self.GetKey(key)
     with self._lock:
-      if key in self._d:
-        if self._d[key] > 1:
-          self._d[key] -= 1
+      if ikey in self._d:
+        if self._d[ikey] > 1:
+          self._d[ikey] -= 1
         else:
-          del self._d[key]
+          del self._d[ikey]
+
+  @classmethod
+  def GetKey(cls, key):
+    """Generates a hashable dictionary key for any object.
+
+    Args:
+      key: the key being counted.
+
+    Returns:
+      key itself if key is hashable, otherwise str(key).
+    """
+    try:
+      hash(key)
+      return key
+    except TypeError:
+      return str(key)
 
 
 class _IterableSubject(_DefaultSubject):

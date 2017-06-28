@@ -86,6 +86,14 @@ class ClassicTestClass:
   """Old-style test class, not inheriting from object."""
 
 
+class DeclassifiedTestClass(object):
+  """Test class that simulates a mock function created by mox.CreateMock()."""
+
+  @property
+  def __class__(self):
+    return lambda: None
+
+
 class BaseTest(unittest.TestCase):
   """Helper class that makes testing failures easier.
 
@@ -198,6 +206,9 @@ class AssertThatTest(BaseTest):
     self.AssertSubject(self, truth._DefaultSubject)
     self.AssertSubject(mock, truth._DefaultSubject)
     self.AssertSubject(TestClass.TestMethod, truth._DefaultSubject)
+
+  def testDeclassifiedClassSubject(self):
+    self.AssertSubject(DeclassifiedTestClass(), truth._DefaultSubject)
 
   def testNoUnresolvedSubjects(self):
     truth._EmptySubject._CheckUnresolved()
@@ -832,6 +843,20 @@ class DuplicateCounterTest(unittest.TestCase):
 
     d.Decrement('a')                   # {}
     self.assertFalse(d)
+    self.assertEqual(len(d), 0)
+    self.assertEqual(str(d), '[]')
+
+  def testUnhashableKeys(self):
+    d = truth._DuplicateCounter()      # {}
+    self.assertNotIn([], d)
+
+    d.Increment(['a'])                 # {['a']: 1}
+    self.assertIn(['a'], d)
+    self.assertEqual(len(d), 1)
+    self.assertEqual(str(d), '["[\'a\']"]')
+
+    d.Decrement(['a'])                 # {}
+    self.assertNotIn([], d)
     self.assertEqual(len(d), 0)
     self.assertEqual(str(d), '[]')
 

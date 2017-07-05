@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,10 @@
 # limitations under the License.
 
 """File for convert.py testing all assertions."""
+
+# pylint: disable=bad-continuation
+# pylint: disable=line-too-long
+# pylint: disable=undefined-variable
 
 self.assertEqual(equal_a0, equal_b0)
 self.assertEqual(equal_t0, True)
@@ -266,3 +270,7 @@ self.assertRaisesRegex(raises_regex_a1, raises_regex_b1, MethodThatRaisesRegex)
 
 self.assertRaisesRegex(raises_regex_a2, raises_regex_b2, MethodThatRaisesRegex,
                        raises_regex_c2, raises_regex_d2)
+
+# pylint: enable=bad-continuation
+# pylint: enable=line-too-long
+# pylint: enable=undefined-variable

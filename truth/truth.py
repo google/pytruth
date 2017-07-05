@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ Import the AssertThat() method to gain access to the module's capabilities:
 
 Alternatively:
   from truth import truth
-  AssertThat = truth.AssertThat
+  AssertThat = truth.AssertThat      # pylint: disable=invalid-name
 
 Then, instead of writing:
   self.assertEqual(a, b)
@@ -124,10 +124,10 @@ import math
 import numbers
 import os
 import re
-import six
 import threading
 
 from mock import mock
+import six
 
 # All these attributes must be present for an object to be deemed comparable.
 _COMPARABLE_ATTRS = frozenset(
@@ -138,7 +138,9 @@ POSITIVE_INFINITY = float('inf')
 NEGATIVE_INFINITY = float('-inf')
 NAN = float('nan')
 
+# pylint: disable=invalid-name
 Cmp = cmp if six.PY2 else lambda a, b: (a > b) - (a < b)
+# pylint: enable=invalid-name
 
 
 # Make a copy of all members of <os> and <os.path>, and inject them into the
@@ -181,10 +183,12 @@ def AssertThat(target):
   """
 
   # All types descend from "type", so check if target is a type itself first.
+  # pylint: disable=unidiomatic-typecheck
   if type(target) is type:
     if issubclass(target, BaseException):
       return _ExceptionClassSubject(target)
     return _ClassSubject(target)
+  # pylint: enable=unidiomatic-typecheck
 
   for super_type, subject_class in six.iteritems(_TYPE_CONSTRUCTORS):
     # Must use issubclass() and not isinstance(), because mocked functions
@@ -454,7 +458,9 @@ class _DefaultSubject(_EmptySubject):
     self._FailWithProposition('is False', suffix=suffix)
 
   # Recognize alternate spelling.
+  # pylint: disable=invalid-name
   IsFalsey = IsFalsy
+  # pylint: enable=invalid-name
 
   def HasAttribute(self, attr):
     if not hasattr(self._actual, attr):
@@ -524,7 +530,7 @@ class _ExceptionSubject(_DefaultSubject, _UnresolvedContextMixin):
         AssertThat(e).HasMessage(self._GetActualMessage())
       AssertThat(e).HasArgsThat().ContainsExactlyElementsIn(
           self._actual.args).InOrder()
-    except BaseException as e:
+    except BaseException as e:    # pylint: disable=broad-except
       self._FailWithSubject(
           'should have been raised, but caught <{0!r}>'.format(e))
     else:
@@ -591,7 +597,7 @@ class _ExceptionClassSubject(_ClassSubject, _UnresolvedContextMixin):
     except self._actual as e:
       if matching is not None:
         AssertThat(e).HasMessageThat().ContainsMatch(matching)
-    except BaseException as e:
+    except BaseException as e:    # pylint: disable=broad-except
       self._FailWithSubject(
           'should have been raised, but caught <{0!r}>'.format(e))
     else:
@@ -1167,9 +1173,11 @@ class _DictionarySubject(_ComparableIterableSubject):
     return AssertThat(self._actual.items()).ContainsExactly(*expected.items())
 
   # Method aliases when translating Java's Map.Entry to Python's items.
+  # pylint: disable=invalid-name
   ContainsEntry = ContainsItem
   DoesNotContainEntry = DoesNotContainItem
   ContainsExactlyEntriesIn = ContainsExactlyItemsIn
+  # pylint: enable=invalid-name
 
 
 class _NumericSubject(_ComparableSubject):
@@ -1361,7 +1369,9 @@ class _MockCalledSubject(_MockAssertionConverter):
 
   def Times(self, expected):
     if self._actual.call_count != expected:
+      # pylint: disable=protected-access
       name = self._actual._mock_name or 'mock'
+      # pylint: enable=protected-access
       self._Fail(
           "Expected '{0}' to have been called {1} times. Called {2} times."
           .format(name, expected, self._actual.call_count))
@@ -1442,4 +1452,7 @@ for t in six.class_types:
     _TYPE_CONSTRUCTORS[t] = _ClassSubject
 
 
+# We really want to dissuade anyone from calling _CheckUnresolved().
+# pylint: disable=protected-access
 atexit.register(_EmptySubject._CheckUnresolved)
+# pylint: enable=protected-access

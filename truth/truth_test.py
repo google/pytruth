@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2017 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ import inspect
 import io
 import os
 import re
-import six
 import unittest
 
 os.environ.setdefault('PBR_VERSION', '1.10.0')
 from mock import mock
 
+import six
 import truth
 
 
@@ -82,7 +82,7 @@ class TestMappingClass(collections.Mapping):
     return 42
 
 
-class ClassicTestClass:
+class ClassicTestClass:      # pylint: disable=old-style-class
   """Old-style test class, not inheriting from object."""
 
 
@@ -117,9 +117,11 @@ class BaseTest(unittest.TestCase):
     else:
       self.fail('expected TruthAssertionError not raised')
 
+  # pylint: disable=invalid-name
   AssertRaisesRegex = getattr(
       unittest.TestCase, 'assertRaisesRegex',
       unittest.TestCase.assertRaisesRegexp)
+  # pylint: enable=invalid-name
 
 
 class AssertThatTest(BaseTest):

@@ -31,3 +31,25 @@ py_test(
         "@mock_2_0_0//:mock",
     ],
 )
+
+py_binary(
+    name = "convert",
+    srcs = ["convert.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@gflags_3_1_1//:gflags",
+        "@pyglib_0_1//:pyglib",
+    ],
+)
+
+py_test(
+    name = "convert_test",
+    srcs = ["convert_test.py"],
+    data = glob(["testdata/*.py"]),
+    srcs_version = "PY2AND3",
+    deps = [
+        ":convert",
+        ":truth",
+    ],
+)

@@ -35,6 +35,26 @@ new_http_archive(
 )
 
 new_http_archive(
+    name = "gflags_3_1_1",
+    build_file = "third_party/gflags/BUILD",
+    sha256 = "aaff6449ca74320c709052e4664a52337832b2338f4a4267088564f3e98f6c63",
+    strip_prefix = "python-gflags-3.1.1",
+    urls = [
+        "https://pypi.python.org/packages/ea/30/b8469c0d1837ce58fe3706e1f7169cbf6ca1fb87d1f84cece5182b67cb0b/python-gflags-3.1.1.tar.gz",
+    ],
+)
+
+new_http_archive(
+    name = "glog_0_3_1",
+    build_file = "third_party/glog/BUILD",
+    sha256 = "b721edef6009eabc0b4d9f2619e153d2627a7b71a3657c8ed69f02ef7c78be97",
+    strip_prefix = "glog-0.3.1",
+    urls = [
+        "https://pypi.python.org/packages/d7/7f/082e2a23f8dff00bd98a7ff7db1b27a3cc66012f2db952a5fc00d8f66b13/glog-0.3.1.tar.gz",
+    ],
+)
+
+new_http_archive(
     name = "mock_2_0_0",
     build_file = "third_party/mock/BUILD",
     sha256 = "b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba",
@@ -61,6 +81,16 @@ new_http_archive(
     strip_prefix = "pbr-1.10.0",
     urls = [
         "https://pypi.python.org/packages/c3/2c/63275fab26a0fd8cadafca71a3623e4d0f0ee8ed7124a5bb128853d178a7/pbr-1.10.0.tar.gz",
+    ],
+)
+
+new_http_archive(
+    name = "pyglib_0_1",
+    build_file = "third_party/pyglib/BUILD",
+    sha256 = "a063c5a847f57b025fd6d569f375aaac284e4d75bc24019b818b14356254e539",
+    strip_prefix = "pyglib-0.1",
+    urls = [
+        "https://pypi.python.org/packages/e8/b2/1d8f675bf1fbb894b190315eb3aa3c4bfb164fb8417ca33028e11a3fceb7/pyglib-0.1.tar.gz",
     ],
 )
 

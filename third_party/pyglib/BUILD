@@ -22,5 +22,8 @@ py_library(
         ["pyglib/*.py"],
     ),
     visibility = ["//visibility:public"],
-    deps = ["@glog_0_3_1//:glog"],
+    deps = [
+        "@gflags_3_1_1//:gflags",
+        "@glog_0_3_1//:glog",
+    ],
 )

@@ -19,7 +19,10 @@ py_library(
     srcs = ["truth.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
-    deps = ["@mock_2_0_0//:mock"],
+    deps = [
+        "@mock_2_0_0//:mock",
+        "@six_1_10_0//:six",
+    ],
 )
 
 py_test(
@@ -29,6 +32,7 @@ py_test(
     deps = [
         ":truth",
         "@mock_2_0_0//:mock",
+        "@six_1_10_0//:six",
     ],
 )
 
@@ -51,5 +55,7 @@ py_test(
     deps = [
         ":convert",
         ":truth",
+        "@gflags_3_1_1//:gflags",
+        "@pyglib_0_1//:pyglib",
     ],
 )

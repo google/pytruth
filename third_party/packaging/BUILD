@@ -24,4 +24,5 @@ py_library(
     name = "packaging",
     srcs = glob(["packaging/*.py"]),
     visibility = ["//visibility:public"],
+    deps = ["@six_1_10_0//:six"],
 )

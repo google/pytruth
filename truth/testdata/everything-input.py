@@ -92,6 +92,7 @@ self.assertEqual((equal_b3, equal_c3), equal_l3)
 self.assertEqual(equal_l4, [equal_b4 for equal_c4 in equal_d4])
 self.assertEqual(equal_l5, (equal_b5 for equal_c5 in equal_d5))
 self.assertEqual(equal_l6, {equal_b6 for equal_c6 in equal_d6})
+self.assertEqual(equal_l7, [equal_b7])
 
 self.assertDictContainsSubset(dict_subset_a0, dict_subset_b0)
 
@@ -108,16 +109,19 @@ self.assertItemsEqual(items_equal_a1, [items_equal_b1, items_equal_c1])
 self.assertItemsEqual(items_equal_a2, (items_equal_b2, items_equal_c2))
 self.assertItemsEqual([items_equal_b3, items_equal_c3], items_equal_a3)
 self.assertItemsEqual((items_equal_b4, items_equal_c4), items_equal_a4)
+self.assertItemsEqual(items_equal_a5, [items_equal_b5])
 
 self.assertListEqual(list_equal_a0, list_equal_b0)
 self.assertListEqual(list_equal_l1, [list_equal_b1, list_equal_c1])
 self.assertListEqual([list_equal_b2, list_equal_c2], list_equal_l2)
+self.assertListEqual(list_equal_l3, [list_equal_b3])
 
 self.assertSequenceEqual(sequence_equal_a0, sequence_equal_b0)
 self.assertSequenceEqual(sequence_equal_a1, [sequence_equal_b1, sequence_equal_c1])
 self.assertSequenceEqual(sequence_equal_a2, (sequence_equal_b2, sequence_equal_c2))
 self.assertSequenceEqual([sequence_equal_b3, sequence_equal_c3], sequence_equal_a3)
 self.assertSequenceEqual((sequence_equal_b4, sequence_equal_c4), sequence_equal_a4)
+self.assertSequenceEqual(sequence_equal_a5, [sequence_equal_b5])
 
 self.assertSetEqual(set_equal_a0, set_equal_b0)
 self.assertSetEqual(set_equal_a1, {set_equal_b1, set_equal_c1})
@@ -126,6 +130,15 @@ self.assertSetEqual({set_equal_b2, set_equal_c2}, set_equal_a2)
 self.assertTupleEqual(tuple_equal_a0, tuple_equal_b0)
 self.assertTupleEqual(tuple_equal_a1, (tuple_equal_b1, tuple_equal_c1))
 self.assertTupleEqual((tuple_equal_b2, tuple_equal_c2), tuple_equal_a2)
+
+self.assertSameElements(same_elements_a0, same_elements_b0)
+self.assertSameElements(same_elements_a1, [same_elements_b1, same_elements_c1])
+self.assertSameElements(same_elements_a2, (same_elements_b2, same_elements_c2))
+self.assertSameElements([same_elements_b3, same_elements_c3], same_elements_a3)
+self.assertSameElements((same_elements_b4, same_elements_c4), same_elements_a4)
+self.assertSameElements(same_elements_a5, [same_elements_b5])
+
+self.assertCountEqual(count_equal_a0, count_equal_b0)
 
 self.assertEquals(equal_a1, equal_b1)
 
@@ -263,13 +276,29 @@ self.assertRaises(raises_a1, MethodThatRaises)
 
 self.assertRaises(raises_a2, MethodThatRaises, raises_b2, raises_c2)
 
-with self.assertRaisesRegex(raises_regex_a0, raises_regex_b0):
+with self.assertRaisesRegexp(raises_regexp_a0, raises_regexp_b0):
+  MethodThatRaisesRegexp()
+
+self.assertRaisesRegexp(
+    raises_regexp_a1, raises_regexp_b1, MethodThatRaisesRegexp)
+
+self.assertRaisesRegexp(
+    raises_regexp_a2, raises_regexp_b2,
+    MethodThatRaisesRegexp,
+    raises_regexp_c2, raises_regexp_d2)
+
+with self.assertRaisesWithRegexpMatch(
+    raises_with_regexp_match_a0, raises_with_regexp_match_b0):
   MethodThatRaisesRegex()
 
-self.assertRaisesRegex(raises_regex_a1, raises_regex_b1, MethodThatRaisesRegex)
+self.assertRaisesWithRegexpMatch(
+    raises_with_regexp_match_a1, raises_with_regexp_match_b1,
+    MethodThatRaisesRegex)
 
-self.assertRaisesRegex(raises_regex_a2, raises_regex_b2, MethodThatRaisesRegex,
-                       raises_regex_c2, raises_regex_d2)
+self.assertRaisesWithRegexpMatch(
+    raises_with_regexp_match_a2, raises_with_regexp_match_b2,
+    MethodThatRaisesRegex,
+    raises_with_regexp_match_c2, raises_with_regexp_match_d2)
 
 # pylint: enable=bad-continuation
 # pylint: enable=line-too-long

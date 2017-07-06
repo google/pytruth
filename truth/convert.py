@@ -18,20 +18,26 @@ Usage:
   python convert.py file1.py [file2.py [...]]
 
 Limitations:
-  - The import of "truth" is not added.
+  - Requires that the input be a compilable (hopefully passing) test.
+  - The import of the truth module is not added.
   - The assignment "AssertThat = truth.AssertThat" is not added.
   - Conversions may cause lines to increase in length.
   - Conversions may modify indentation and line wrapping.
-  - Converts all instance of self.assertTrue(a) to AssertThat(a).IsTrue().
+  - Converts all instance of assertTrue(a) to AssertThat(a).IsTrue().
     In unittest, assertTrue() asserts *truthiness*, while PyTruth's IsTrue()
     matches only True itself. You may need to modify some IsTrue() assertions
     to IsTruthy(), and likewise for assertFalse(), IsFalse(), and IsFalsy().
-  - Converts self.assertEqual(len(str), n) to AssertThat(str).HasSize(n),
-    although HasLength(n) is actually more appropriate.
+  - Converts assertEqual(len(str), n) to AssertThat(str).HasSize(n).
+    This works, but HasLength(n) is actually more appropriate.
   - Does not convert mock function assertions.
-  - Does not convert self.assertIn(k, dict) to AssertThat(dict).ContainsKey(k).
-  - Does not convert self.assertIn(s, str) to AssertThat(str).Contains(s).
-  - Does not convert self.assertTrue(not a) to AssertThat(a).IsFalse().
+  - Does not convert assertAlmostEqual(a, b, [places=p|delta=d]) to
+    AssertThat(a).IsWithin(d).Of(b), and likewise for assertNotAlmostEqual().
+  - Converts assertIn(k, dict) to AssertThat(k).IsIn(dict).
+    This works, but AssertThat(dict).ContainsKey(k) is more appropriate.
+  - Converts assertIn(s, str) to AssertThat(s).IsIn(str).
+    This works, but AssertThat(str).Contains(s) is more appropriate.
+  - Does not convert assertTrue(a == b) to AssertThat(a).IsEqualTo(b).
+  - Does not convert assertTrue(not a) to AssertThat(a).IsFalse().
 """
 
 from __future__ import print_function
@@ -62,6 +68,8 @@ class Converter(object):
       'SequenceEqual': '({0}).ContainsExactlyElementsIn({1}).InOrder()',
       'SetEqual': '({0}).ContainsExactlyElementsIn({1})',
       'TupleEqual': '({0}).ContainsExactlyElementsIn({1}).InOrder()',
+      'SameElements': '({0}).ContainsExactlyElementsIn({1})',
+      'CountEqual': '({0}).HasSize(len({1}))',
       '_': '({0}).IsTrue()',
       'True': '({0}).IsTrue()',
       'False': '({0}).IsFalse()',
@@ -82,7 +90,8 @@ class Converter(object):
       'NotRegex': '({0}).DoesNotContainMatch({1})',
       'NotRegexpMatches': '({0}).DoesNotContainMatch({1})',
       'Raises': '({0}).IsRaised()',
-      'RaisesRegex': '({0}).IsRaised(matching={1})',
+      'RaisesRegexp': '({0}).IsRaised(matching={1})',
+      'RaisesWithRegexpMatch': '({0}).IsRaised(matching={1})',
   }
 
   INEQUALITY_REVERSALS = {
@@ -91,6 +100,13 @@ class Converter(object):
       'Greater': '({0}).IsLessThan({1})',
       'GreaterEqual': '({0}).IsAtMost({1})',
   }
+
+  MEMBERSHIP_ASSERTIONS = frozenset(('ItemsEqual', 'SameElements'))
+
+  REVERSIBLE_ASSERTIONS = frozenset(
+      set(INEQUALITY_REVERSALS.iterkeys())
+      | {k for k in UNITTEST_ASSERTIONS if 'Equal' in k}
+      | MEMBERSHIP_ASSERTIONS)
 
   ASSERTION_RE = re.compile(r'(([ \t]*)self\.assert({0})\s*\()'.format(
       r'|'.join(UNITTEST_ASSERTIONS)))
@@ -101,13 +117,17 @@ class Converter(object):
       'collections.OrderedDict()'))
 
   LIST_EQUALITY_ASSERTIONS = frozenset((
-      'Equal', 'Equals', 'ItemsEqual', 'ListEqual', 'SequenceEqual'))
+      'Equal', 'Equals', 'ItemsEqual', 'ListEqual', 'SameElements',
+      'SequenceEqual'))
   TUPLE_EQUALITY_ASSERTIONS = frozenset((
-      'Equal', 'Equals', 'ItemsEqual', 'SequenceEqual', 'TupleEqual'))
+      'Equal', 'Equals', 'ItemsEqual', 'SameElements',
+      'SequenceEqual', 'TupleEqual'))
   DICT_EQUALITY_ASSERTIONS = frozenset((
-      'DictEqual', 'Equal', 'Equals', 'ItemsEqual'))
+      'DictEqual', 'Equal', 'Equals', 'ItemsEqual', 'SameElements'))
   SET_EQUALITY_ASSERTIONS = frozenset((
-      'Equal', 'Equals', 'ItemsEqual', 'SetEqual'))
+      'Equal', 'Equals', 'ItemsEqual', 'SameElements', 'SetEqual'))
+  RAISES_REGEX_ASSERTIONS = frozenset((
+      'RaisesRegexp', 'RaisesWithRegexpMatch'))
 
   ANY_QUOTE = '["\']'
   QUOTE_RE = re.compile(ANY_QUOTE)
@@ -249,7 +269,7 @@ class Converter(object):
     more_indentation = FLAGS.indentation.replace('\\t', '\t')
     reversible = (
         len(args) == 2
-        and ('Equal' in ut_key or ut_key in cls.INEQUALITY_REVERSALS)
+        and ut_key in cls.REVERSIBLE_ASSERTIONS
         and (cls.CALL_RE.search(args[1])
              and args[1] not in cls.EMPTY_CONTAINERS
              and not cls.CALL_RE.search(args[0])
@@ -301,7 +321,7 @@ class Converter(object):
                   indentation, more_indentation,
                   args[0], args[1], ', '.join(args[2:]))
 
-    elif ut_key == 'RaisesRegex' and len(args) >= 3:
+    elif ut_key in cls.RAISES_REGEX_ASSERTIONS and len(args) >= 3:
       return ('{0}with AssertThat({2}).IsRaised(matching={3}):\n'
               '{0}{1}{4}({5})').format(
                   indentation, more_indentation,
@@ -326,7 +346,7 @@ class Converter(object):
           else:
             assertion = '({0}).IsNonZero()'.format(args[0])
 
-      elif 'Equal' in ut_key:
+      elif 'Equal' in ut_key or ut_key in cls.MEMBERSHIP_ASSERTIONS:
         if args[1] == 'True':
           assertion = '({0}).IsTrue()'.format(args[0])
         elif args[1] == 'False':
@@ -341,8 +361,11 @@ class Converter(object):
               and ut_key in cls.LIST_EQUALITY_ASSERTIONS
               or cls.TUPLE_RE.search(args[1])
               and ut_key in cls.TUPLE_EQUALITY_ASSERTIONS):
-          order = '' if ut_key == 'ItemsEqual' else '.InOrder()'
           els_in = 'ElementsIn' if cls.COMPREHENSION_RE.search(args[1]) else ''
+          order = ''
+          if (ut_key not in cls.MEMBERSHIP_ASSERTIONS
+              and (els_in or ',' in args[1])):
+            order = '.InOrder()'
           assertion = '({0}).ContainsExactly{1}({2}){3}'.format(
               args[0], els_in, args[1][1:-1].strip(), order)
         elif (cls.DICT_RE.search(args[1])

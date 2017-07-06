@@ -91,6 +91,7 @@ AssertThat(equal_l3).ContainsExactly(equal_b3, equal_c3).InOrder()
 AssertThat(equal_l4).ContainsExactlyElementsIn(equal_b4 for equal_c4 in equal_d4).InOrder()
 AssertThat(equal_l5).ContainsExactlyElementsIn(equal_b5 for equal_c5 in equal_d5).InOrder()
 AssertThat(equal_l6).ContainsExactlyElementsIn(equal_b6 for equal_c6 in equal_d6)
+AssertThat(equal_l7).ContainsExactly(equal_b7)
 
 AssertThat(dict_subset_a0.items()).ContainsAllIn(dict_subset_b0.items())
 
@@ -107,16 +108,19 @@ AssertThat(items_equal_a1).ContainsExactly(items_equal_b1, items_equal_c1)
 AssertThat(items_equal_a2).ContainsExactly(items_equal_b2, items_equal_c2)
 AssertThat(items_equal_a3).ContainsExactly(items_equal_b3, items_equal_c3)
 AssertThat(items_equal_a4).ContainsExactly(items_equal_b4, items_equal_c4)
+AssertThat(items_equal_a5).ContainsExactly(items_equal_b5)
 
 AssertThat(list_equal_a0).ContainsExactlyElementsIn(list_equal_b0).InOrder()
 AssertThat(list_equal_l1).ContainsExactly(list_equal_b1, list_equal_c1).InOrder()
 AssertThat(list_equal_l2).ContainsExactly(list_equal_b2, list_equal_c2).InOrder()
+AssertThat(list_equal_l3).ContainsExactly(list_equal_b3)
 
 AssertThat(sequence_equal_a0).ContainsExactlyElementsIn(sequence_equal_b0).InOrder()
 AssertThat(sequence_equal_a1).ContainsExactly(sequence_equal_b1, sequence_equal_c1).InOrder()
 AssertThat(sequence_equal_a2).ContainsExactly(sequence_equal_b2, sequence_equal_c2).InOrder()
 AssertThat(sequence_equal_a3).ContainsExactly(sequence_equal_b3, sequence_equal_c3).InOrder()
 AssertThat(sequence_equal_a4).ContainsExactly(sequence_equal_b4, sequence_equal_c4).InOrder()
+AssertThat(sequence_equal_a5).ContainsExactly(sequence_equal_b5)
 
 AssertThat(set_equal_a0).ContainsExactlyElementsIn(set_equal_b0)
 AssertThat(set_equal_a1).ContainsExactly(set_equal_b1, set_equal_c1)
@@ -125,6 +129,15 @@ AssertThat(set_equal_a2).ContainsExactly(set_equal_b2, set_equal_c2)
 AssertThat(tuple_equal_a0).ContainsExactlyElementsIn(tuple_equal_b0).InOrder()
 AssertThat(tuple_equal_a1).ContainsExactly(tuple_equal_b1, tuple_equal_c1).InOrder()
 AssertThat(tuple_equal_a2).ContainsExactly(tuple_equal_b2, tuple_equal_c2).InOrder()
+
+AssertThat(same_elements_a0).ContainsExactlyElementsIn(same_elements_b0)
+AssertThat(same_elements_a1).ContainsExactly(same_elements_b1, same_elements_c1)
+AssertThat(same_elements_a2).ContainsExactly(same_elements_b2, same_elements_c2)
+AssertThat(same_elements_a3).ContainsExactly(same_elements_b3, same_elements_c3)
+AssertThat(same_elements_a4).ContainsExactly(same_elements_b4, same_elements_c4)
+AssertThat(same_elements_a5).ContainsExactly(same_elements_b5)
+
+AssertThat(count_equal_a0).HasSize(len(count_equal_b0))
 
 AssertThat(equal_a1).IsEqualTo(equal_b1)
 
@@ -264,14 +277,23 @@ with AssertThat(raises_a1).IsRaised():
 with AssertThat(raises_a2).IsRaised():
   MethodThatRaises(raises_b2, raises_c2)
 
-with AssertThat(raises_regex_a0).IsRaised(matching=raises_regex_b0):
+with AssertThat(raises_regexp_a0).IsRaised(matching=raises_regexp_b0):
+  MethodThatRaisesRegexp()
+
+with AssertThat(raises_regexp_a1).IsRaised(matching=raises_regexp_b1):
+  MethodThatRaisesRegexp()
+
+with AssertThat(raises_regexp_a2).IsRaised(matching=raises_regexp_b2):
+  MethodThatRaisesRegexp(raises_regexp_c2, raises_regexp_d2)
+
+with AssertThat(raises_with_regexp_match_a0).IsRaised(matching=raises_with_regexp_match_b0):
   MethodThatRaisesRegex()
 
-with AssertThat(raises_regex_a1).IsRaised(matching=raises_regex_b1):
+with AssertThat(raises_with_regexp_match_a1).IsRaised(matching=raises_with_regexp_match_b1):
   MethodThatRaisesRegex()
 
-with AssertThat(raises_regex_a2).IsRaised(matching=raises_regex_b2):
-  MethodThatRaisesRegex(raises_regex_c2, raises_regex_d2)
+with AssertThat(raises_with_regexp_match_a2).IsRaised(matching=raises_with_regexp_match_b2):
+  MethodThatRaisesRegex(raises_with_regexp_match_c2, raises_with_regexp_match_d2)
 
 # pylint: enable=bad-continuation
 # pylint: enable=line-too-long

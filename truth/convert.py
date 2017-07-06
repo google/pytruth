@@ -104,7 +104,7 @@ class Converter(object):
   MEMBERSHIP_ASSERTIONS = frozenset(('ItemsEqual', 'SameElements'))
 
   REVERSIBLE_ASSERTIONS = frozenset(
-      set(INEQUALITY_REVERSALS.iterkeys())
+      set(INEQUALITY_REVERSALS)
       | {k for k in UNITTEST_ASSERTIONS if 'Equal' in k}
       | MEMBERSHIP_ASSERTIONS)
 

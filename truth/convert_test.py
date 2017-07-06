@@ -16,11 +16,13 @@
 
 import hashlib
 import os
-import subprocess
 import tempfile
 import unittest
 
+import convert
 os.environ.setdefault('PBR_VERSION', '1.10.0')
+from mock import mock
+from pyglib import app
 import truth
 
 
@@ -29,6 +31,7 @@ AssertThat = truth.AssertThat     # pylint: disable=invalid-name
 
 class ConvertTest(unittest.TestCase):
 
+  INPUT_PY = 'input.py'
   TRUTH_DIR = os.path.join(
       os.environ['TEST_SRCDIR'], os.environ['TEST_WORKSPACE'], 'truth')
   TESTDATA = os.path.join(TRUTH_DIR, 'testdata')
@@ -56,12 +59,10 @@ class ConvertTest(unittest.TestCase):
     self.temp_file.close()
 
     # Convert the temporary file in-place.
-    convert_bin = os.path.join(self.TRUTH_DIR, 'convert')
-    convert = subprocess.Popen((convert_bin, self.temp_file.name))
-    convert.communicate()
+    return_code = convert.main([self.temp_file.name])
 
     # Check the return code.
-    AssertThat(convert.returncode).IsEqualTo(expected_return_code)
+    AssertThat(return_code).IsEqualTo(expected_return_code)
 
     # Check the contents line by line.
     # This is not strictly necessary given the SHA-512 verification, but it
@@ -87,6 +88,51 @@ class ConvertTest(unittest.TestCase):
   def testUnbalancedParanthesesDoesNotOverwriteFile(self):
     self._Test('unbalanced', 1)
 
+  def testNoFilesGiven(self):
+    AssertThat(convert.main(['convert'])).IsNonZero()
+
+  @mock.patch.object(convert.Converter, '_Check', return_value=False)
+  def testCheckFails(self, mock_check):
+    AssertThat(convert.main(['convert', self.INPUT_PY])).IsNonZero()
+    AssertThat(mock_check).WasCalled().Once()
+
+  @mock.patch.object(os.path, 'isfile', return_value=False)
+  def testCheckNonexistentInputFile(self, mock_isfile):
+    converter = convert.Converter([self.INPUT_PY])
+    AssertThat(converter._Check()).IsFalse()
+    AssertThat(mock_isfile).WasCalled().Once().With(self.INPUT_PY)
+
+  @mock.patch.object(os.path, 'isfile', return_value=True)
+  @mock.patch.object(os, 'access', return_value=False)
+  def testCheckUnreadableInputFile(self, mock_access, mock_isfile):
+    converter = convert.Converter([self.INPUT_PY])
+    AssertThat(converter._Check()).IsFalse()
+    AssertThat(mock_isfile).WasCalled().Once().With(self.INPUT_PY)
+    AssertThat(mock_access).WasCalled().Once().With(self.INPUT_PY, os.R_OK)
+
+  @mock.patch.object(os.path, 'isfile', return_value=True)
+  @mock.patch.object(os, 'access', side_effect=(True, False))
+  def testCheckUnwritableInputFile(self, mock_access, mock_isfile):
+    converter = convert.Converter([self.INPUT_PY])
+    AssertThat(converter._Check()).IsFalse()
+    AssertThat(mock_isfile).WasCalled().Once().With(self.INPUT_PY)
+    AssertThat(mock_access).WasCalled().With(self.INPUT_PY, os.R_OK)
+    AssertThat(mock_access).WasCalled().LastWith(self.INPUT_PY, os.W_OK)
+
+  @mock.patch.object(os.path, 'isfile', return_value=True)
+  @mock.patch.object(os, 'access', side_effect=(True, True))
+  def testCheckAccessOk(self, mock_access, mock_isfile):
+    converter = convert.Converter([self.INPUT_PY])
+    AssertThat(converter._Check()).IsTrue()
+    AssertThat(mock_isfile).WasCalled().Once().With(self.INPUT_PY)
+    AssertThat(mock_access).WasCalled().With(self.INPUT_PY, os.R_OK)
+    AssertThat(mock_access).WasCalled().LastWith(self.INPUT_PY, os.W_OK)
+
+
+def main(unused_args):
+  unittest.main()
+
 
 if __name__ == '__main__':
-  unittest.main()
+  convert.DefineFlags()
+  app.run()

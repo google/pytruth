@@ -287,6 +287,8 @@ class Converter(object):
              and not cls.LIST_RE.search(args[1])
              or cls.TUPLE_RE.search(args[0])
              and not cls.TUPLE_RE.search(args[1])
+             or cls.DICT_RE.search(args[0])
+             and not cls.DICT_RE.search(args[1])
              or cls.SET_RE.search(args[0])
              and not cls.SET_RE.search(args[1])
              or cls.OS_ENVIRON_RE.search(args[1])
@@ -335,8 +337,6 @@ class Converter(object):
           assertion = '({0}).IsTrue()'.format(args[0])
         elif args[1] == 'None':
           assertion = '({0}).IsNotNone()'.format(args[0])
-        elif args[0] in cls.EMPTY_CONTAINERS:
-          assertion = '({0}).IsNotEmpty()'.format(args[1])
         elif args[1] in cls.EMPTY_CONTAINERS:
           assertion = '({0}).IsNotEmpty()'.format(args[0])
         elif args[1] == '0':
@@ -353,8 +353,6 @@ class Converter(object):
           assertion = '({0}).IsFalse()'.format(args[0])
         elif args[1] == 'None':
           assertion = '({0}).IsNone()'.format(args[0])
-        elif args[0] in cls.EMPTY_CONTAINERS:
-          assertion = '({0}).IsEmpty()'.format(args[1])
         elif args[1] in cls.EMPTY_CONTAINERS:
           assertion = '({0}).IsEmpty()'.format(args[0])
         elif (cls.LIST_RE.search(args[1])
@@ -425,7 +423,7 @@ def main(args):
   return 0 if Converter(args).Convert() else 1
 
 
-if __name__ == '__main__':
+def DefineFlags():
   gflags.DEFINE_string(
       'indentation', '  ',
       'Indentation characters when creating "with" contexts.'
@@ -433,4 +431,8 @@ if __name__ == '__main__':
   gflags.DEFINE_string(
       'output', None,
       'Output file path. By default, files are converted in-place.')
+
+
+if __name__ == '__main__':
+  DefineFlags()
   app.run()

@@ -42,6 +42,16 @@ py_binary(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        ":convert_lib",
+    ],
+)
+
+py_library(
+    name = "convert_lib",
+    srcs = ["convert.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
         "@gflags_3_1_1//:gflags",
         "@pyglib_0_1//:pyglib",
     ],
@@ -53,9 +63,10 @@ py_test(
     data = glob(["testdata/*.py"]),
     srcs_version = "PY2AND3",
     deps = [
-        ":convert",
+        ":convert_lib",
         ":truth",
         "@gflags_3_1_1//:gflags",
+        "@mock_2_0_0//:mock",
         "@pyglib_0_1//:pyglib",
     ],
 )

@@ -103,6 +103,8 @@ self.assertDictEqual(dict_equal_e2, collections.OrderedDict())
 self.assertDictEqual({}, dict_equal_e3)
 self.assertDictEqual(dict(), dict_equal_e4)
 self.assertDictEqual(collections.OrderedDict(), dict_equal_e5)
+self.assertDictEqual(dict_equal_a6, {dict_equal_b6: dict_equal_c6})
+self.assertDictEqual({dict_equal_b7: dict_equal_c7}, dict_equal_a7)
 
 self.assertItemsEqual(items_equal_a0, items_equal_b0)
 self.assertItemsEqual(items_equal_a1, [items_equal_b1, items_equal_c1])

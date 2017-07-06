@@ -102,6 +102,8 @@ AssertThat(dict_equal_e2).IsEmpty()
 AssertThat(dict_equal_e3).IsEmpty()
 AssertThat(dict_equal_e4).IsEmpty()
 AssertThat(dict_equal_e5).IsEmpty()
+AssertThat(dict_equal_a6).ContainsExactlyItemsIn({dict_equal_b6: dict_equal_c6})
+AssertThat(dict_equal_a7).ContainsExactlyItemsIn({dict_equal_b7: dict_equal_c7})
 
 AssertThat(items_equal_a0).ContainsExactlyElementsIn(items_equal_b0)
 AssertThat(items_equal_a1).ContainsExactly(items_equal_b1, items_equal_c1)

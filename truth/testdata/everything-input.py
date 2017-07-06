@@ -289,15 +289,15 @@ self.assertRaisesRegexp(
 
 with self.assertRaisesWithRegexpMatch(
     raises_with_regexp_match_a0, raises_with_regexp_match_b0):
-  MethodThatRaisesRegex()
+  MethodThatRaisesRegexp()
 
 self.assertRaisesWithRegexpMatch(
     raises_with_regexp_match_a1, raises_with_regexp_match_b1,
-    MethodThatRaisesRegex)
+    MethodThatRaisesRegexp)
 
 self.assertRaisesWithRegexpMatch(
     raises_with_regexp_match_a2, raises_with_regexp_match_b2,
-    MethodThatRaisesRegex,
+    MethodThatRaisesRegexp,
     raises_with_regexp_match_c2, raises_with_regexp_match_d2)
 
 # pylint: enable=bad-continuation

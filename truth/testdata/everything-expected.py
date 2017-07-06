@@ -287,13 +287,13 @@ with AssertThat(raises_regexp_a2).IsRaised(matching=raises_regexp_b2):
   MethodThatRaisesRegexp(raises_regexp_c2, raises_regexp_d2)
 
 with AssertThat(raises_with_regexp_match_a0).IsRaised(matching=raises_with_regexp_match_b0):
-  MethodThatRaisesRegex()
+  MethodThatRaisesRegexp()
 
 with AssertThat(raises_with_regexp_match_a1).IsRaised(matching=raises_with_regexp_match_b1):
-  MethodThatRaisesRegex()
+  MethodThatRaisesRegexp()
 
 with AssertThat(raises_with_regexp_match_a2).IsRaised(matching=raises_with_regexp_match_b2):
-  MethodThatRaisesRegex(raises_with_regexp_match_c2, raises_with_regexp_match_d2)
+  MethodThatRaisesRegexp(raises_with_regexp_match_c2, raises_with_regexp_match_d2)
 
 # pylint: enable=bad-continuation
 # pylint: enable=line-too-long

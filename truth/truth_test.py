@@ -20,6 +20,7 @@ import inspect
 import io
 import os
 import re
+import time
 import unittest
 
 os.environ.setdefault('PBR_VERSION', '1.10.0')
@@ -161,7 +162,19 @@ class AssertThatTest(BaseTest):
 
   @mock.patch('os.path.isdir')
   @mock.patch('time.sleep')
-  def testMockSubject(self, mock_sleep, mock_isdir):
+  def testMockPatchSubject(self, mock_sleep, mock_isdir):
+    self.AssertSubject(mock_isdir, truth._MockSubject)
+    self.AssertSubject(mock_sleep, truth._MockSubject)
+
+  @mock.patch.object(os.path, 'isdir')
+  @mock.patch.object(time, 'sleep')
+  def testMockPatchObjectSubject(self, mock_sleep, mock_isdir):
+    self.AssertSubject(mock_isdir, truth._MockSubject)
+    self.AssertSubject(mock_sleep, truth._MockSubject)
+
+  @mock.patch.object(os.path, 'isdir', autospec=True)
+  @mock.patch.object(time, 'sleep', autospec=True)
+  def testMockPatchObjectAutospecSubject(self, mock_sleep, mock_isdir):
     self.AssertSubject(mock_isdir, truth._MockSubject)
     self.AssertSubject(mock_sleep, truth._MockSubject)
 
@@ -291,6 +304,25 @@ class IsIterableTest(unittest.TestCase):
   @mock.patch('time.time')
   def testMockedFunction(self, mock_time):
     self.assertTrue(truth._IsIterable(mock_time))
+
+
+class IsMockTest(unittest.TestCase):
+
+  @mock.patch.object(os.path, 'isdir')
+  @mock.patch.object(time, 'sleep', autospec=True)
+  def testIsMock(self, mock_sleep, mock_isdir):
+    self.assertTrue(truth._IsMock(mock_isdir))
+    self.assertTrue(truth._IsMock(mock_sleep))
+
+  def testIsNotMock(self):
+    self.assertFalse(truth._IsMock(lambda: None))
+    self.assertFalse(truth._IsMock(os.path.isdir))
+    self.assertFalse(truth._IsMock(time.sleep))
+    self.assertFalse(truth._IsMock(None))
+    self.assertFalse(truth._IsMock(1))
+    self.assertFalse(truth._IsMock(TestClass))
+    self.assertFalse(truth._IsMock(TestClass()))
+    self.assertFalse(truth._IsMock(DeclassifiedTestClass()))
 
 
 class IsNumericTest(unittest.TestCase):

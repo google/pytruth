@@ -133,6 +133,12 @@ import six
 _COMPARABLE_ATTRS = frozenset(
     '__{0}__'.format(attr) for attr in ('lt', 'le', 'gt', 'ge'))
 
+
+# All these attributes must be present for an object to be recognized as a mock.
+_MOCK_ATTRS = frozenset((
+    'called', 'assert_called_with', 'reset_mock', 'return_value'))
+
+
 # Special numeric concepts.
 POSITIVE_INFINITY = float('inf')
 NEGATIVE_INFINITY = float('-inf')
@@ -204,6 +210,8 @@ def AssertThat(target):
     return _ComparableSubject(target)
   if _IsIterable(target):
     return _IterableSubject(target)
+  if _IsMock(target):
+    return _MockSubject(target)
 
   return _DefaultSubject(target)
 
@@ -235,6 +243,16 @@ def _IsIterable(target):
     return isinstance(target, collections.Iterable)
   except (AttributeError, TypeError):
     return False
+
+
+def _IsMock(target):
+  """Returns True if the target is a mock."""
+  if isinstance(target, mock.NonCallableMock):
+    return True
+  for attr in _MOCK_ATTRS:
+    if not hasattr(target, attr):
+      return False
+  return True
 
 
 def _IsNumeric(target):

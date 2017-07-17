@@ -63,13 +63,15 @@ class Converter(object):
       'NotEquals': '({0}).IsNotEqualTo({1})',
       'DictContainsSubset': '({0}.items()).ContainsAllIn({1}.items())',
       'DictEqual': '({0}).ContainsExactlyItemsIn({1})',
-      'ItemsEqual': '({0}).ContainsExactlyElementsIn({1})',
       'ListEqual': '({0}).ContainsExactlyElementsIn({1}).InOrder()',
       'SequenceEqual': '({0}).ContainsExactlyElementsIn({1}).InOrder()',
       'SetEqual': '({0}).ContainsExactlyElementsIn({1})',
       'TupleEqual': '({0}).ContainsExactlyElementsIn({1}).InOrder()',
       'SameElements': '({0}).ContainsExactlyElementsIn({1})',
-      'CountEqual': '({0}).HasSize(len({1}))',
+      'CountEqual': ('(sorted({0})).ContainsExactlyElementsIn(sorted({1}))'
+                     '.InOrder()'),
+      'ItemsEqual': ('(sorted({0})).ContainsExactlyElementsIn(sorted({1}))'
+                     '.InOrder()'),
       '_': '({0}).IsTrue()',
       'True': '({0}).IsTrue()',
       'False': '({0}).IsFalse()',
@@ -101,7 +103,8 @@ class Converter(object):
       'GreaterEqual': '({0}).IsAtMost({1})',
   }
 
-  MEMBERSHIP_ASSERTIONS = frozenset(('ItemsEqual', 'SameElements'))
+  MEMBERSHIP_ASSERTIONS = frozenset((
+      'CountEqual', 'ItemsEqual', 'SameElements'))
 
   REVERSIBLE_ASSERTIONS = frozenset(
       set(INEQUALITY_REVERSALS)
@@ -117,15 +120,15 @@ class Converter(object):
       'collections.OrderedDict()'))
 
   LIST_EQUALITY_ASSERTIONS = frozenset((
-      'Equal', 'Equals', 'ItemsEqual', 'ListEqual', 'SameElements',
-      'SequenceEqual'))
+      'Equal', 'Equals', 'ListEqual', 'SameElements', 'SequenceEqual'))
   TUPLE_EQUALITY_ASSERTIONS = frozenset((
-      'Equal', 'Equals', 'ItemsEqual', 'SameElements',
-      'SequenceEqual', 'TupleEqual'))
+      'Equal', 'Equals', 'SameElements', 'SequenceEqual', 'TupleEqual'))
   DICT_EQUALITY_ASSERTIONS = frozenset((
-      'DictEqual', 'Equal', 'Equals', 'ItemsEqual', 'SameElements'))
+      'CountEqual', 'DictEqual', 'Equal', 'Equals', 'ItemsEqual',
+      'SameElements'))
   SET_EQUALITY_ASSERTIONS = frozenset((
-      'Equal', 'Equals', 'ItemsEqual', 'SameElements', 'SetEqual'))
+      'CountEqual', 'Equal', 'Equals', 'ItemsEqual', 'SameElements',
+      'SetEqual'))
   RAISES_REGEX_ASSERTIONS = frozenset((
       'RaisesRegexp', 'RaisesWithRegexpMatch'))
 
@@ -296,7 +299,10 @@ class Converter(object):
              or args[0] in cls.EMPTY_CONTAINERS
              and args[1] not in cls.EMPTY_CONTAINERS
              or cls.LEN_CALL_RE.search(args[1])
-             and cls.NUMERIC_RE.search(args[0])))
+             and cls.NUMERIC_RE.search(args[0])
+             or cls.COMPREHENSION_RE.search(args[0])
+             and not cls.COMPREHENSION_RE.search(args[0])
+             and not cls.CALL_RE.search(args[0])))
 
     if reversible:
       args.reverse()

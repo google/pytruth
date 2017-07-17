@@ -93,6 +93,10 @@ self.assertEqual(equal_l4, [equal_b4 for equal_c4 in equal_d4])
 self.assertEqual(equal_l5, (equal_b5 for equal_c5 in equal_d5))
 self.assertEqual(equal_l6, {equal_b6 for equal_c6 in equal_d6})
 self.assertEqual(equal_l7, [equal_b7])
+self.assertEqual([equal_b8 for equal_c8 in equal_d8], equal_l8)
+self.assertEqual((equal_b9 for equal_c9 in equal_d9), equal_l9)
+self.assertEqual({equal_ba for equal_ca in equal_da}, equal_la)
+self.assertEqual([equal_bb], equal_lb)
 
 self.assertDictContainsSubset(dict_subset_a0, dict_subset_b0)
 
@@ -105,6 +109,13 @@ self.assertDictEqual(dict(), dict_equal_e4)
 self.assertDictEqual(collections.OrderedDict(), dict_equal_e5)
 self.assertDictEqual(dict_equal_a6, {dict_equal_b6: dict_equal_c6})
 self.assertDictEqual({dict_equal_b7: dict_equal_c7}, dict_equal_a7)
+
+self.assertCountEqual(count_equal_a0, count_equal_b0)
+self.assertCountEqual(count_equal_a1, [count_equal_b1, count_equal_c1])
+self.assertCountEqual(count_equal_a2, (count_equal_b2, count_equal_c2))
+self.assertCountEqual([count_equal_b3, count_equal_c3], count_equal_a3)
+self.assertCountEqual((count_equal_b4, count_equal_c4), count_equal_a4)
+self.assertCountEqual(count_equal_a5, [count_equal_b5])
 
 self.assertItemsEqual(items_equal_a0, items_equal_b0)
 self.assertItemsEqual(items_equal_a1, [items_equal_b1, items_equal_c1])
@@ -139,8 +150,6 @@ self.assertSameElements(same_elements_a2, (same_elements_b2, same_elements_c2))
 self.assertSameElements([same_elements_b3, same_elements_c3], same_elements_a3)
 self.assertSameElements((same_elements_b4, same_elements_c4), same_elements_a4)
 self.assertSameElements(same_elements_a5, [same_elements_b5])
-
-self.assertCountEqual(count_equal_a0, count_equal_b0)
 
 self.assertEquals(equal_a1, equal_b1)
 

@@ -92,6 +92,10 @@ AssertThat(equal_l4).ContainsExactlyElementsIn(equal_b4 for equal_c4 in equal_d4
 AssertThat(equal_l5).ContainsExactlyElementsIn(equal_b5 for equal_c5 in equal_d5).InOrder()
 AssertThat(equal_l6).ContainsExactlyElementsIn(equal_b6 for equal_c6 in equal_d6)
 AssertThat(equal_l7).ContainsExactly(equal_b7)
+AssertThat(equal_l8).ContainsExactlyElementsIn(equal_b8 for equal_c8 in equal_d8).InOrder()
+AssertThat(equal_l9).ContainsExactlyElementsIn(equal_b9 for equal_c9 in equal_d9).InOrder()
+AssertThat(equal_la).ContainsExactlyElementsIn(equal_ba for equal_ca in equal_da)
+AssertThat(equal_lb).ContainsExactly(equal_bb)
 
 AssertThat(dict_subset_a0.items()).ContainsAllIn(dict_subset_b0.items())
 
@@ -105,12 +109,19 @@ AssertThat(dict_equal_e5).IsEmpty()
 AssertThat(dict_equal_a6).ContainsExactlyItemsIn({dict_equal_b6: dict_equal_c6})
 AssertThat(dict_equal_a7).ContainsExactlyItemsIn({dict_equal_b7: dict_equal_c7})
 
-AssertThat(items_equal_a0).ContainsExactlyElementsIn(items_equal_b0)
-AssertThat(items_equal_a1).ContainsExactly(items_equal_b1, items_equal_c1)
-AssertThat(items_equal_a2).ContainsExactly(items_equal_b2, items_equal_c2)
-AssertThat(items_equal_a3).ContainsExactly(items_equal_b3, items_equal_c3)
-AssertThat(items_equal_a4).ContainsExactly(items_equal_b4, items_equal_c4)
-AssertThat(items_equal_a5).ContainsExactly(items_equal_b5)
+AssertThat(sorted(count_equal_a0)).ContainsExactlyElementsIn(sorted(count_equal_b0)).InOrder()
+AssertThat(sorted(count_equal_a1)).ContainsExactlyElementsIn(sorted([count_equal_b1, count_equal_c1])).InOrder()
+AssertThat(sorted(count_equal_a2)).ContainsExactlyElementsIn(sorted((count_equal_b2, count_equal_c2))).InOrder()
+AssertThat(sorted(count_equal_a3)).ContainsExactlyElementsIn(sorted([count_equal_b3, count_equal_c3])).InOrder()
+AssertThat(sorted(count_equal_a4)).ContainsExactlyElementsIn(sorted((count_equal_b4, count_equal_c4))).InOrder()
+AssertThat(sorted(count_equal_a5)).ContainsExactlyElementsIn(sorted([count_equal_b5])).InOrder()
+
+AssertThat(sorted(items_equal_a0)).ContainsExactlyElementsIn(sorted(items_equal_b0)).InOrder()
+AssertThat(sorted(items_equal_a1)).ContainsExactlyElementsIn(sorted([items_equal_b1, items_equal_c1])).InOrder()
+AssertThat(sorted(items_equal_a2)).ContainsExactlyElementsIn(sorted((items_equal_b2, items_equal_c2))).InOrder()
+AssertThat(sorted(items_equal_a3)).ContainsExactlyElementsIn(sorted([items_equal_b3, items_equal_c3])).InOrder()
+AssertThat(sorted(items_equal_a4)).ContainsExactlyElementsIn(sorted((items_equal_b4, items_equal_c4))).InOrder()
+AssertThat(sorted(items_equal_a5)).ContainsExactlyElementsIn(sorted([items_equal_b5])).InOrder()
 
 AssertThat(list_equal_a0).ContainsExactlyElementsIn(list_equal_b0).InOrder()
 AssertThat(list_equal_l1).ContainsExactly(list_equal_b1, list_equal_c1).InOrder()
@@ -138,8 +149,6 @@ AssertThat(same_elements_a2).ContainsExactly(same_elements_b2, same_elements_c2)
 AssertThat(same_elements_a3).ContainsExactly(same_elements_b3, same_elements_c3)
 AssertThat(same_elements_a4).ContainsExactly(same_elements_b4, same_elements_c4)
 AssertThat(same_elements_a5).ContainsExactly(same_elements_b5)
-
-AssertThat(count_equal_a0).HasSize(len(count_equal_b0))
 
 AssertThat(equal_a1).IsEqualTo(equal_b1)
 

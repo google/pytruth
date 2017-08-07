@@ -207,7 +207,7 @@ unittest                        | PyTruth
 `assertTrue(b in a and c in a)` | `AssertThat(a).ContainsAllOf(b, c)`<br>`AssertThat(a).ContainsAllIn([b, c])`
 `assertTrue(b in a or c in a)`  | `AssertThat(a).ContainsAnyOf(b, c)`<br>`AssertThat(a).ContainsAnyIn([b, c])`
 `assertTrue(b in a and c in a and len(a) == 2)`      | `AssertThat(a).ContainsExactly(b, c)`
-`assertCountEqual(a, b)`<br>`assertItemsEqual(a, b)` | `AssertThat(a).ContainsExactlyElementsIn(b)`
+`assertCountEqual(a, b)`<br>`assertItemsEqual(a, b)` | `AssertThat(sorted(a)).ContainsExactlyElementsIn(sorted(b)).InOrder()`
 `assertTrue(b not in a and c not in a)`              | `AssertThat(a).ContainsNoneOf(b, c)`<br>`AssertThat(a).ContainsNoneIn([b, c])`
 N/A                             | `AssertThat(a).ContainsNoDuplicates()`
 N/A                             | `AssertThat(a).IsOrdered()`

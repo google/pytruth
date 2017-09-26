@@ -1463,10 +1463,12 @@ class StringSubjectTest(BaseTest):
 
 class MockSubjectTest(BaseTest):
 
+  ALL_CALLS = 'All calls: '
+
   @mock.patch('time.sleep')
   def testWasCalled(self, mock_sleep):
     s = truth._MockSubject(mock_sleep)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[]'):
       s.WasCalled()
     mock_sleep(10)
     s.WasCalled()
@@ -1476,7 +1478,7 @@ class MockSubjectTest(BaseTest):
     s = truth._MockSubject(mock_sleep)
     s.WasNotCalled()
     mock_sleep(10)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[call(10)]'):
       s.WasNotCalled()
 
   @mock.patch('time.sleep')
@@ -1503,39 +1505,45 @@ class MockSubjectTest(BaseTest):
     mock_sleep(10)
     s.HasCalls([mock.call(5), mock.call(10)], any_order=True)
     s.HasCalls([mock.call(10), mock.call(5)], any_order=True)
+    with self.Failure():
+      s.HasCalls([mock.call(5), mock.call(7)])
+    with self.Failure():
+      s.HasCalls([mock.call(7), mock.call(10)])
 
 
 class MockCalledSubjectTest(BaseTest):
 
+  ALL_CALLS = 'All calls: '
+
   @mock.patch('time.sleep')
   def testOnce(self, mock_sleep):
     s = truth._MockCalledSubject(mock_sleep)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[]'):
       s.Once()
     mock_sleep(10)
     s.Once()
     mock_sleep(10)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[call(10), call(10)]'):
       s.Once()
 
   @mock.patch('time.sleep')
   def testTimes(self, mock_sleep):
     s = truth._MockCalledSubject(mock_sleep)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[]'):
       s.Times(2)
     mock_sleep(10)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[call(10)]'):
       s.Times(2)
     mock_sleep(10)
     s.Times(2)
     mock_sleep(10)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[call(10), call(10), call(10)]'):
       s.Times(2)
 
   @mock.patch('time.sleep')
   def testWith(self, mock_sleep):
     s = truth._MockCalledSubject(mock_sleep)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[]'):
       s.With(10)
     mock_sleep(10)
     s.With(10)
@@ -1546,13 +1554,13 @@ class MockCalledSubjectTest(BaseTest):
   @mock.patch('time.sleep')
   def testLastWith(self, mock_sleep):
     s = truth._MockCalledSubject(mock_sleep)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[]'):
       s.LastWith(10)
     mock_sleep(10)
     s.LastWith(10)
     mock_sleep(5)
     s.LastWith(5)
-    with self.Failure():
+    with self.Failure(self.ALL_CALLS, '[call(10), call(5)]'):
       s.LastWith(10)
 
 

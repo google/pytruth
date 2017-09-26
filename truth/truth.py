@@ -1311,11 +1311,15 @@ class _MockAssertionConverter(_DefaultSubject):
   """
 
   @contextlib.contextmanager
-  def _WrapMockAssertions(self):
+  def _WrapMockAssertions(self, include_actual=True):
     try:
       yield
     except AssertionError as e:
-      raise TruthAssertionError(e)
+      if include_actual:
+        raise TruthAssertionError(
+            str(e) + '\nAll calls: {0}'.format(self._actual.mock_calls))
+      else:
+        raise TruthAssertionError(e)
 
 
 class _MockSubject(_MockAssertionConverter):
@@ -1369,7 +1373,7 @@ class _MockSubject(_MockAssertionConverter):
       self._actual.assert_not_called()
 
   def HasCalls(self, calls, any_order=False):
-    with self._WrapMockAssertions():
+    with self._WrapMockAssertions(include_actual=False):
       self._actual.assert_has_calls(calls, any_order=any_order)
 
 
@@ -1391,8 +1395,10 @@ class _MockCalledSubject(_MockAssertionConverter):
       name = self._actual._mock_name or 'mock'
       # pylint: enable=protected-access
       self._Fail(
-          "Expected '{0}' to have been called {1} times. Called {2} times."
-          .format(name, expected, self._actual.call_count))
+          "Expected '{0}' to have been called {1} times. Called {2} times.\n"
+          "All calls: {3}"
+          .format(name, expected, self._actual.call_count,
+                  self._actual.mock_calls))
     return self
 
   def With(self, *args, **kwargs):

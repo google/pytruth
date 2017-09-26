@@ -682,7 +682,7 @@ class _DuplicateCounter(object):
   def __str__(self):
     """Returns the string representation of the duplicate counts.
 
-    Items occuring more than once are accompanied by their count.
+    Items occurring more than once are accompanied by their count.
     Otherwise the count is implied to be 1.
 
     For example, if the internal dict is {2: 1, 3: 4, 'abc': 1}, this returns
@@ -1390,6 +1390,7 @@ class _MockCalledSubject(_MockAssertionConverter):
     return self
 
   def Times(self, expected):
+    """Asserts that the mock was called an expected number of times."""
     if self._actual.call_count != expected:
       # pylint: disable=protected-access
       name = self._actual._mock_name or 'mock'

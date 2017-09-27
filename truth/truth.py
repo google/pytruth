@@ -766,6 +766,21 @@ class _IterableSubject(_DefaultSubject):
   whereas they would always succeed without the .InOrder().
   """
 
+  def IsEqualTo(self, other):
+    try:
+      if (isinstance(self._actual, collections.Sequence)
+          and isinstance(other, collections.Sequence)
+          and not isinstance(self._actual, six.string_types)
+          and not isinstance(other, six.string_types)):
+        return self.ContainsExactlyElementsIn(other).InOrder()
+      elif (isinstance(self._actual, collections.Set)
+            and isinstance(other, collections.Set)):
+        return self.ContainsExactlyElementsIn(other)
+    except (AttributeError, TypeError):
+      pass
+
+    return super(_IterableSubject, self).IsEqualTo(other)
+
   def HasSize(self, size):
     if len(self._actual) != size:
       self._FailWithBadResults('has a size of', size, 'is', len(self._actual))
@@ -1140,6 +1155,19 @@ class _DictionarySubject(_ComparableIterableSubject):
   The warnings about orderedness in _IterableSubject also apply.
   """
 
+  def IsEqualTo(self, other):
+    try:
+      if (isinstance(self._actual, collections.OrderedDict)
+          and isinstance(other, collections.OrderedDict)):
+        return self.ContainsExactlyItemsIn(other).InOrder()
+      elif (isinstance(self._actual, collections.Mapping)
+            and isinstance(other, collections.Mapping)):
+        return self.ContainsExactlyItemsIn(other)
+    except (AttributeError, TypeError):
+      pass
+
+    return super(_DictionarySubject, self).IsEqualTo(other)
+
   def ContainsKey(self, key):
     if key not in self._actual:
       self._FailWithProposition('contains key <{0}>'.format(key))
@@ -1444,6 +1472,9 @@ class _NoneSubject(
   detects the version of Python and compares or fails appropriately, rather than
   allowing Python 3's TypeError to bubble up.
   """
+
+  def IsEqualTo(self, other):
+    return _DefaultSubject.IsEqualTo(self, other)
 
   def __getattribute__(self, name):
     if (name.startswith('_') or

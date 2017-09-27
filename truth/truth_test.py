@@ -1053,6 +1053,60 @@ class IterableSubjectTest(BaseTest):
     with self.Failure('is empty'):
       s.ContainsExactlyElementsIn(())
 
+  def testSequenceIsEqualToUsesContainsExactlyElementsInPlusInOrder(self):
+    s = truth._IterableSubject((3, 5, 8))
+    s.IsEqualTo((3, 5, 8))
+    with self.Failure('contains exactly', 'in order', '<(8, 3, 5)>'):
+      s.IsEqualTo((8, 3, 5))
+    with self.Failure('contains exactly', 'is missing <[9]>'):
+      s.IsEqualTo((3, 5, 8, 9))
+    with self.Failure('contains exactly', 'is missing <[9, 10]>'):
+      s.IsEqualTo((9, 3, 5, 8, 10))
+    with self.Failure('contains exactly', 'has unexpected items <[8]>'):
+      s.IsEqualTo((3, 5))
+    with self.Failure('contains exactly', 'has unexpected items <[5]>'):
+      s.IsEqualTo((8, 3))
+    with self.Failure('contains exactly', 'has unexpected items <[5, 8]>'):
+      s.IsEqualTo((3,))
+    with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
+      s.IsEqualTo((4, 4))
+    with self.Failure(
+        'contains exactly', 'is missing <[9]>', 'has unexpected items <[8]>'):
+      s.IsEqualTo((3, 5, 9))
+    with self.Failure('is empty'):
+      s.IsEqualTo(())
+
+  def testSetIsEqualToUsesContainsExactlyElementsIn(self):
+    s = truth._IterableSubject({3, 5, 8})
+    s.IsEqualTo({3, 5, 8})
+    s.IsEqualTo({8, 3, 5})
+    with self.Failure('contains exactly', 'is missing <[9]>'):
+      s.IsEqualTo({3, 5, 8, 9})
+    with self.Failure('contains exactly', 'is missing <[9, 10]>'):
+      s.IsEqualTo({9, 3, 5, 8, 10})
+    with self.Failure('contains exactly', 'has unexpected items <[8]>'):
+      s.IsEqualTo({3, 5})
+    with self.Failure('contains exactly', 'has unexpected items <[5]>'):
+      s.IsEqualTo({8, 3})
+    unexpected = [i for i in {3, 5, 8} if i in {5, 8}]
+    with self.Failure('contains exactly',
+                      'has unexpected items <{0!r}>'.format(unexpected)):
+      s.IsEqualTo({3})
+    with self.Failure('contains exactly', 'is missing <[4]>'):
+      s.IsEqualTo({4})
+    with self.Failure(
+        'contains exactly', 'is missing <[9]>', 'has unexpected items <[8]>'):
+      s.IsEqualTo({3, 5, 9})
+    with self.Failure('is empty'):
+      s.IsEqualTo(set())
+
+  def testIsEqualToComparedWithNonIterables(self):
+    s = truth._IterableSubject((3, 5, 8))
+    with self.Failure('is equal to <3>'):
+      s.IsEqualTo(3)
+    with self.Failure('is equal to', 'DeclassifiedTestClass'):
+      s.IsEqualTo(DeclassifiedTestClass())
+
   def testContainsExactlyElementsInEmptyContainer(self):
     s = truth._IterableSubject(())
     s.ContainsExactlyElementsIn(())
@@ -1242,6 +1296,68 @@ class DictionarySubjectTest(BaseTest):
         "contains exactly <((2, 'two'), (4, 'four'), (5, 'five'))>",
         "missing <[(5, 'five')]>"):
       s.ContainsExactlyItemsIn({2: 'two', 4: 'four', 5: 'five'})
+
+  def testOrderedDictIsEqualToUsesContainsExactlyItemsInPlusInOrder(self):
+    d1 = collections.OrderedDict(((2, 'two'), (4, 'four')))
+    d2 = collections.OrderedDict(((2, 'two'), (4, 'four')))
+    d3 = collections.OrderedDict(((4, 'four'), (2, 'two')))
+    s = truth._DictionarySubject(d1)
+    s.IsEqualTo(d2)
+
+    with self.Failure(
+        'contains exactly', 'in order', "<((4, 'four'), (2, 'two'))>"):
+      s.IsEqualTo(d3)
+
+    with self.Failure(
+        "contains exactly <((2, 'two'),)>",
+        "has unexpected items <[(4, 'four')]>",
+        'often not the correct thing to do'):
+      s.IsEqualTo(collections.OrderedDict(((2, 'two'),)))
+
+    with self.Failure(
+        "contains exactly <((2, 'two'), (4, 'for'))>",
+        "missing <[(4, 'for')]>",
+        "has unexpected items <[(4, 'four')]>"):
+      s.IsEqualTo(collections.OrderedDict(((2, 'two'), (4, 'for'))))
+
+    with self.Failure(
+        "contains exactly <((2, 'two'), (4, 'four'), (5, 'five'))>",
+        "missing <[(5, 'five')]>"):
+      s.IsEqualTo(collections.OrderedDict(
+          ((2, 'two'), (4, 'four'), (5, 'five'))))
+
+  def testDictIsEqualToUsesContainsExactlyItemsIn(self):
+    d1 = {2: 'two', 4: 'four'}
+    d2 = {2: 'two', 4: 'four'}
+    d3 = collections.OrderedDict(((4, 'four'), (2, 'two')))
+    s = truth._DictionarySubject(d1)
+    s.IsEqualTo(d2)
+    s.IsEqualTo(d3)
+
+    with self.Failure(
+        "contains exactly <((2, 'two'),)>",
+        "has unexpected items <[(4, 'four')]>",
+        'often not the correct thing to do'):
+      s.IsEqualTo({2: 'two'})
+
+    with self.Failure(
+        "contains exactly <((2, 'two'), (4, 'for'))>",
+        "missing <[(4, 'for')]>",
+        "has unexpected items <[(4, 'four')]>"):
+      s.IsEqualTo(collections.OrderedDict(((2, 'two'), (4, 'for'))))
+
+    with self.Failure(
+        "contains exactly <((2, 'two'), (4, 'four'), (5, 'five'))>",
+        "missing <[(5, 'five')]>"):
+      s.IsEqualTo(collections.OrderedDict(
+          ((2, 'two'), (4, 'four'), (5, 'five'))))
+
+  def testIsEqualToComparedWithNonDictionary(self):
+    s = truth._DictionarySubject({2: 'two', 4: 'four'})
+    with self.Failure('is equal to <3>'):
+      s.IsEqualTo(3)
+    with self.Failure('is equal to', 'DeclassifiedTestClass'):
+      s.IsEqualTo(DeclassifiedTestClass())
 
 
 class NumericSubjectTest(BaseTest):

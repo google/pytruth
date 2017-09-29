@@ -95,6 +95,14 @@ class DeclassifiedTestClass(object):
     return lambda: None
 
 
+class DeclassifiedListTestClass(list, DeclassifiedTestClass):
+  """Test class that simulates a mock.call object."""
+
+
+class DeclassifiedDictTestClass(dict, DeclassifiedTestClass):
+  """Test class that simulates a dictionary object object without a class."""
+
+
 class BaseTest(unittest.TestCase):
   """Helper class that makes testing failures easier.
 
@@ -465,6 +473,7 @@ class DefaultSubjectTest(BaseTest):
   def testIsNotIn(self):
     s = truth._DefaultSubject(3)
     s.IsNotIn((5,))
+    s.IsNotIn(frozenset((5,)))
     s.IsNotIn(('3',))
     with self.Failure('is not in (3,)', 'found at index 0'):
       s.IsNotIn((3,))
@@ -1100,12 +1109,27 @@ class IterableSubjectTest(BaseTest):
     with self.Failure('is empty'):
       s.IsEqualTo(set())
 
-  def testIsEqualToComparedWithNonIterables(self):
+  def testSequenceIsEqualToComparedWithNonIterables(self):
     s = truth._IterableSubject((3, 5, 8))
     with self.Failure('is equal to <3>'):
       s.IsEqualTo(3)
     with self.Failure('is equal to', 'DeclassifiedTestClass'):
       s.IsEqualTo(DeclassifiedTestClass())
+
+  def testSetIsEqualToComparedWithNonIterables(self):
+    s = truth._IterableSubject({3, 5, 8})
+    with self.Failure('is equal to <3>'):
+      s.IsEqualTo(3)
+    with self.Failure('is equal to', 'DeclassifiedTestClass'):
+      s.IsEqualTo(DeclassifiedTestClass())
+
+  def testIsEqualToComparedWithDeclassifiedIterable(self):
+    s = truth._IterableSubject(DeclassifiedListTestClass())
+    expected = DeclassifiedListTestClass()
+    s.IsEqualTo(expected)
+    expected.append(3)
+    with self.Failure('is equal to <[3]>'):
+      s.IsEqualTo(expected)
 
   def testContainsExactlyElementsInEmptyContainer(self):
     s = truth._IterableSubject(())
@@ -1116,6 +1140,7 @@ class IterableSubjectTest(BaseTest):
   def testContainsNoneIn(self):
     s = truth._IterableSubject((3, 5, 8))
     s.ContainsNoneIn(())
+    s.ContainsNoneIn((2,))
     s.ContainsNoneIn((2, 6))
     with self.Failure('contains no elements', 'contains <[5]>'):
       s.ContainsNoneIn((5,))
@@ -1125,6 +1150,7 @@ class IterableSubjectTest(BaseTest):
   def testContainsNoneOf(self):
     s = truth._IterableSubject((3, 5, 8))
     s.ContainsNoneOf()
+    s.ContainsNoneOf(2)
     s.ContainsNoneOf(2, 6)
     with self.Failure('contains none of', 'contains <[5]>'):
       s.ContainsNoneOf(5)
@@ -1171,6 +1197,11 @@ class IterableSubjectTest(BaseTest):
     with self.Failure('is strictly ordered <(5, 5)>'):
       truth._IterableSubject((5, 5, 3)).IsStrictlyOrderedAccordingTo(r)
 
+  @mock.patch('time.sleep')
+  def testCallArgsListElementComparedWithIsEqualTo(self, mock_sleep):
+    mock_sleep(5)
+    s = truth._IterableSubject(mock_sleep.call_args_list[0])
+    s.IsEqualTo(mock.call(5))
 
 class OrderedTest(unittest.TestCase):
 
@@ -1340,17 +1371,18 @@ class DictionarySubjectTest(BaseTest):
         'often not the correct thing to do'):
       s.IsEqualTo({2: 'two'})
 
+    expected = {2: 'two', 4: 'for'}
     with self.Failure(
-        "contains exactly <((2, 'two'), (4, 'for'))>",
+        'contains exactly <{0!r}>'.format(tuple(expected.items())),
         "missing <[(4, 'for')]>",
         "has unexpected items <[(4, 'four')]>"):
-      s.IsEqualTo(collections.OrderedDict(((2, 'two'), (4, 'for'))))
+      s.IsEqualTo(expected)
 
+    expected = {2: 'two', 4: 'four', 5: 'five'}
     with self.Failure(
-        "contains exactly <((2, 'two'), (4, 'four'), (5, 'five'))>",
+        'contains exactly <{0!r}>'.format(tuple(expected.items())),
         "missing <[(5, 'five')]>"):
-      s.IsEqualTo(collections.OrderedDict(
-          ((2, 'two'), (4, 'four'), (5, 'five'))))
+      s.IsEqualTo(expected)
 
   def testIsEqualToComparedWithNonDictionary(self):
     s = truth._DictionarySubject({2: 'two', 4: 'four'})
@@ -1358,6 +1390,15 @@ class DictionarySubjectTest(BaseTest):
       s.IsEqualTo(3)
     with self.Failure('is equal to', 'DeclassifiedTestClass'):
       s.IsEqualTo(DeclassifiedTestClass())
+
+  def testIsEqualToComparedWithDeclassifiedDictionary(self):
+    s = truth._DictionarySubject(DeclassifiedDictTestClass())
+    expected = DeclassifiedDictTestClass()
+    s.IsEqualTo(expected)
+    expected[3] = 'three'
+    with self.Failure(
+        "contains exactly <((3, 'three'),)>", "missing <[(3, 'three')]>"):
+      s.IsEqualTo(expected)
 
 
 class NumericSubjectTest(BaseTest):

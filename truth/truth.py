@@ -768,13 +768,12 @@ class _IterableSubject(_DefaultSubject):
 
   def IsEqualTo(self, other):
     try:
-      if (isinstance(self._actual, collections.Sequence)
-          and isinstance(other, collections.Sequence)
+      if (type(self._actual) is type(other)
+          and not isinstance(self._actual, type(mock.call))
           and not isinstance(self._actual, six.string_types)
           and not isinstance(other, six.string_types)):
-        return self.ContainsExactlyElementsIn(other).InOrder()
-      elif (isinstance(self._actual, collections.Set)
-            and isinstance(other, collections.Set)):
+        if isinstance(self._actual, collections.Sequence):
+          return self.ContainsExactlyElementsIn(other).InOrder()
         return self.ContainsExactlyElementsIn(other)
     except (AttributeError, TypeError):
       pass
@@ -1156,15 +1155,10 @@ class _DictionarySubject(_ComparableIterableSubject):
   """
 
   def IsEqualTo(self, other):
-    try:
-      if (isinstance(self._actual, collections.OrderedDict)
-          and isinstance(other, collections.OrderedDict)):
+    if type(self._actual) is type(other):
+      if isinstance(self._actual, collections.OrderedDict):
         return self.ContainsExactlyItemsIn(other).InOrder()
-      elif (isinstance(self._actual, collections.Mapping)
-            and isinstance(other, collections.Mapping)):
-        return self.ContainsExactlyItemsIn(other)
-    except (AttributeError, TypeError):
-      pass
+      return self.ContainsExactlyItemsIn(other)
 
     return super(_DictionarySubject, self).IsEqualTo(other)
 

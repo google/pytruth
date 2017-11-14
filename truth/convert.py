@@ -47,10 +47,10 @@ import os
 import re
 import sys
 
-import gflags
-from pyglib import app
+from absl import app
+from absl import flags
 
-FLAGS = gflags.FLAGS
+FLAGS = flags.FLAGS
 
 
 class Converter(object):
@@ -430,15 +430,15 @@ def main(args):
 
 
 def DefineFlags():
-  gflags.DEFINE_string(
+  flags.DEFINE_string(
       'indentation', '  ',
       'Indentation characters when creating "with" contexts.'
       ' "\\t" is recognized as a tab character.')
-  gflags.DEFINE_string(
+  flags.DEFINE_string(
       'output', None,
       'Output file path. By default, files are converted in-place.')
 
 
 if __name__ == '__main__':
   DefineFlags()
-  app.run()
+  app.run(main)

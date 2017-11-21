@@ -34,24 +34,13 @@ new_http_archive(
     ],
 )
 
-new_http_archive(
-    name = "gflags_3_1_1",
-    build_file = "third_party/gflags/BUILD",
-    sha256 = "aaff6449ca74320c709052e4664a52337832b2338f4a4267088564f3e98f6c63",
-    strip_prefix = "python-gflags-3.1.1",
+http_archive(
+    name = "absl_py",
     urls = [
-        "https://pypi.python.org/packages/ea/30/b8469c0d1837ce58fe3706e1f7169cbf6ca1fb87d1f84cece5182b67cb0b/python-gflags-3.1.1.tar.gz",
+        "https://github.com/abseil/abseil-py/archive/521823174db442f6d5c6f3386b538feec58f6656.tar.gz",
     ],
-)
-
-new_http_archive(
-    name = "glog_0_3_1",
-    build_file = "third_party/glog/BUILD",
-    sha256 = "b721edef6009eabc0b4d9f2619e153d2627a7b71a3657c8ed69f02ef7c78be97",
-    strip_prefix = "glog-0.3.1",
-    urls = [
-        "https://pypi.python.org/packages/d7/7f/082e2a23f8dff00bd98a7ff7db1b27a3cc66012f2db952a5fc00d8f66b13/glog-0.3.1.tar.gz",
-    ],
+    sha256 = "6179f3a7c7ae54cba837cbfabe07bd87932afdb9d6e78ed5c01b087f95cd7e20",
+    strip_prefix = "abseil-py-521823174db442f6d5c6f3386b538feec58f6656",
 )
 
 new_http_archive(
@@ -85,16 +74,6 @@ new_http_archive(
 )
 
 new_http_archive(
-    name = "pyglib_0_1",
-    build_file = "third_party/pyglib/BUILD",
-    sha256 = "a063c5a847f57b025fd6d569f375aaac284e4d75bc24019b818b14356254e539",
-    strip_prefix = "pyglib-0.1",
-    urls = [
-        "https://pypi.python.org/packages/e8/b2/1d8f675bf1fbb894b190315eb3aa3c4bfb164fb8417ca33028e11a3fceb7/pyglib-0.1.tar.gz",
-    ],
-)
-
-new_http_archive(
     name = "pyparsing_2_1_10",
     build_file = "third_party/pyparsing/BUILD",
     sha256 = "811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188",
@@ -115,7 +94,7 @@ new_http_archive(
 )
 
 new_http_archive(
-    name = "six_1_10_0",
+    name = "six_archive",
     build_file = "third_party/six/BUILD",
     sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a",
     strip_prefix = "six-1.10.0",

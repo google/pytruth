@@ -17,19 +17,18 @@
 import hashlib
 import os
 import tempfile
-import unittest
 
 import convert
 os.environ.setdefault('PBR_VERSION', '1.10.0')
 from mock import mock
-from pyglib import app
+from absl.testing import absltest
 import truth
 
 
 AssertThat = truth.AssertThat     # pylint: disable=invalid-name
 
 
-class ConvertTest(unittest.TestCase):
+class ConvertTest(absltest.TestCase):
 
   INPUT_PY = 'input.py'
   TRUTH_DIR = os.path.join(
@@ -129,10 +128,6 @@ class ConvertTest(unittest.TestCase):
     AssertThat(mock_access).WasCalled().LastWith(self.INPUT_PY, os.W_OK)
 
 
-def main(unused_args):
-  unittest.main()
-
-
 if __name__ == '__main__':
   convert.DefineFlags()
-  app.run()
+  absltest.main()

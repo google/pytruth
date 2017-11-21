@@ -23,6 +23,6 @@ py_library(
     deps = [
         "@funcsigs_1_0_2//:funcsigs",
         "@pbr_1_10_0//:pbr",
-        "@six_1_10_0//:six",
+        "@six_archive//:six",
     ],
 )

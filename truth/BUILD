@@ -21,7 +21,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "@mock_2_0_0//:mock",
-        "@six_1_10_0//:six",
+        "@six_archive//:six",
     ],
 )
 
@@ -32,7 +32,7 @@ py_test(
     deps = [
         ":truth",
         "@mock_2_0_0//:mock",
-        "@six_1_10_0//:six",
+        "@six_archive//:six",
     ],
 )
 
@@ -52,8 +52,8 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        "@gflags_3_1_1//:gflags",
-        "@pyglib_0_1//:pyglib",
+        "@absl_py//absl:app",
+        "@absl_py//absl/flags",
     ],
 )
 
@@ -65,8 +65,8 @@ py_test(
     deps = [
         ":convert_lib",
         ":truth",
-        "@gflags_3_1_1//:gflags",
+        "@absl_py//absl/flags",
+        "@absl_py//absl/testing:absltest",
         "@mock_2_0_0//:mock",
-        "@pyglib_0_1//:pyglib",
     ],
 )

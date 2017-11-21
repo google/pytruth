@@ -42,13 +42,13 @@ Limitations:
 
 from __future__ import print_function
 
-import logging
 import os
 import re
-import sys
 
 from absl import app
 from absl import flags
+from absl import logging
+
 
 FLAGS = flags.FLAGS
 
@@ -158,10 +158,7 @@ class Converter(object):
   def Convert(self):
     """Executes the conversion process."""
     if not self._paths:
-      print('\n'.join((
-          sys.modules['__main__'].__doc__,
-          'flags:',
-          FLAGS.MainModuleHelp())))
+      app.usage(shorthelp=True)
       return False
 
     if not self._Check():
@@ -426,7 +423,7 @@ class Converter(object):
 
 
 def main(args):
-  return 0 if Converter(args).Convert() else 1
+  return 0 if Converter(args[1:]).Convert() else 1
 
 
 def DefineFlags():

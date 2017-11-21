@@ -58,7 +58,7 @@ class ConvertTest(absltest.TestCase):
     self.temp_file.close()
 
     # Convert the temporary file in-place.
-    return_code = convert.main([self.temp_file.name])
+    return_code = convert.main(['convert', self.temp_file.name])
 
     # Check the return code.
     AssertThat(return_code).IsEqualTo(expected_return_code)

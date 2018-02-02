@@ -756,18 +756,52 @@ class ExceptionClassSubjectTest(BaseTest):
       with s.IsRaised():
         pass
 
-  def testIsRaisedMatching(self):
+  def testDifferentType(self):
     s = truth._ExceptionClassSubject(ValueError)
-    with s.IsRaised(matching='bcd'):
-      raise ValueError('abcdefg')
-    with s.IsRaised(matching=re.compile(r'b.d')):
-      raise ValueError('abcdefg')
-    with self.Failure('should have contained a match for <abc>'):
-      with s.IsRaised(matching='abc'):
-        raise ValueError('def')
     with self.Failure('but caught <OSError'):
       with s.IsRaised():
         raise OSError('os error')
+
+  def testIsRaisedMatching(self):
+    s = truth._ExceptionClassSubject(ValueError)
+    with s.IsRaised(matching=r'bcd'):
+      raise ValueError('abcdefg')
+    with s.IsRaised(matching=r'b.d'):
+      raise ValueError('abcdefg')
+    with s.IsRaised(matching=re.compile(r'b.d')):
+      raise ValueError('abcdefg')
+    with self.Failure('should have contained a match for <b(c)d>'):
+      with s.IsRaised(matching=r'b(c)d'):
+        raise ValueError('ab(c)d')
+    with self.Failure('should have contained a match for <abc>'):
+      with s.IsRaised(matching=r'abc'):
+        raise ValueError('def')
+
+  def testIsRaisedContaining(self):
+    s = truth._ExceptionClassSubject(ValueError)
+    with s.IsRaised(containing='bcd'):
+      raise ValueError('abcdefg')
+    with s.IsRaised(containing='b(c)d'):
+      raise ValueError('ab(c)defg')
+    with self.Failure("should have contained <'abc'>"):
+      with s.IsRaised(containing='abc'):
+        raise ValueError('def')
+    with self.Failure("should have contained <'b.d'>"):
+      with s.IsRaised(containing='b.d'):
+        raise ValueError('abcdefg')
+
+  def testIsRaisedMatchingAndContaining(self):
+    s = truth._ExceptionClassSubject(ValueError)
+    with s.IsRaised(matching=r'b', containing='c'):
+      raise ValueError('abcdefg')
+    with s.IsRaised(matching=r'b.d', containing='fg'):
+      raise ValueError('abcdefg')
+    with self.Failure('should have contained a match for <abc>'):
+      with s.IsRaised(matching=r'abc', containing='def'):
+        raise ValueError('def')
+    with self.Failure("should have contained <'def'>"):
+      with s.IsRaised(matching=r'abc', containing='def'):
+        raise ValueError('abc')
 
   def testUnresolvedContext(self):
     s = truth._ExceptionClassSubject(ValueError)

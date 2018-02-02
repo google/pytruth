@@ -596,16 +596,17 @@ class _ExceptionClassSubject(_ClassSubject, _UnresolvedContextMixin):
   """Subject for exception classes (i.e., subclasses of BaseException)."""
 
   @contextlib.contextmanager
-  def IsRaised(self, matching=None):
+  def IsRaised(self, matching=None, containing=None):
     """Asserts that an exception matching this subject is raised.
 
     The raised exception must be the same type as (or a subclass of) this
-    subject's.
+    subject's. None, one, or both of matching= and containing= may be specified.
 
     Args:
       matching: string or regex object. If present, the raised exception's
-          "message" attribute must contain this value. If omitted, the raised
-          exception's message is not checked.
+          "message" attribute must contain this value, as a regular expression.
+      containing: string. If present, the raised exception's "message" attribute
+          must contain this literal string value.
 
     Yields:
       None
@@ -615,6 +616,8 @@ class _ExceptionClassSubject(_ClassSubject, _UnresolvedContextMixin):
     except self._actual as e:
       if matching is not None:
         AssertThat(e).HasMessageThat().ContainsMatch(matching)
+      if containing is not None:
+        AssertThat(e).HasMessageThat().Contains(containing)
     except BaseException as e:    # pylint: disable=broad-except
       self._FailWithSubject(
           'should have been raised, but caught <{0!r}>'.format(e))

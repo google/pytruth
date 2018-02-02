@@ -267,6 +267,7 @@ unittest                                | PyTruth
 ----------------------------------------|-------------------------------------------------
 `with assertRaises(e):`                 | `with AssertThat(e).IsRaised():`
 `with assertRaisesRegex(e, r):`         | `with AssertThat(e).IsRaised(matching=r):`
+N/A                                     | `with AssertThat(e).IsRaised(containing='a'):`
 `assertEqual(e.message, m)`             | `AssertThat(e).HasMessage(m)`
 `assertTrue(e.message.startswith('a'))` | `AssertThat(e).HasMessageThat().StartsWith('a')`
 `assertIn(a, e.args)`                   | `AssertThat(e).HasArgsThat().Contains(a)`

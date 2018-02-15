@@ -14,6 +14,10 @@
 
 """Tests truth module."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import collections
 import contextlib
 import inspect
@@ -283,6 +287,43 @@ class IsComparableTest(unittest.TestCase):
   @mock.patch('time.time')
   def testMockedFunction(self, mock_time):
     self.assertTrue(truth._IsComparable(mock_time))
+
+
+class IsHashableTest(unittest.TestCase):
+
+  def testIsHashable(self):
+    self.assertTrue(truth._IsHashable(()))
+    self.assertTrue(truth._IsHashable(frozenset()))
+    self.assertTrue(truth._IsHashable(''))
+    self.assertTrue(truth._IsHashable(u''))
+    self.assertTrue(truth._IsHashable(None))
+    self.assertTrue(truth._IsHashable(1))
+    self.assertTrue(truth._IsHashable(Long(1)))
+    self.assertTrue(truth._IsHashable(1.0))
+    self.assertTrue(truth._IsHashable(complex(0, 1)))
+    self.assertTrue(truth._IsHashable(TestClass))
+    self.assertTrue(truth._IsHashable(TestClass()))
+    self.assertTrue(truth._IsHashable(True))
+
+  def testIsNotHashable(self):
+    self.assertFalse(truth._IsHashable([]))
+    self.assertFalse(truth._IsHashable({}))
+    self.assertFalse(truth._IsHashable(set()))
+    self.assertFalse(truth._IsHashable(collections.defaultdict(int)))
+    self.assertFalse(truth._IsHashable(collections.deque()))
+    self.assertFalse(truth._IsHashable(collections.OrderedDict()))
+    self.assertFalse(truth._IsHashable(bytearray()))
+    self.assertFalse(truth._IsHashable(mock.call()))
+
+  def testBuffer(self):
+    if six.PY2:
+      self.assertTrue(truth._IsHashable(Buffer('')))
+    else:
+      self.assertFalse(truth._IsHashable(Buffer('')))
+
+  @mock.patch('time.time')
+  def testMockedFunction(self, mock_time):
+    self.assertTrue(truth._IsHashable(mock_time))
 
 
 class IsIterableTest(unittest.TestCase):
@@ -967,22 +1008,28 @@ class IterableSubjectTest(BaseTest):
         s.IsNotEmpty()
 
   def testContains(self):
-    s = truth._IterableSubject((2, 5))
+    s = truth._IterableSubject((2, 5, []))
     s.Contains(2)
     s.Contains(5)
+    s.Contains([])
     with self.Failure('should have contained <3>'):
       s.Contains(3)
     with self.Failure("should have contained <'2'>"):
       s.Contains('2')
+    with self.Failure('should have contained <{}>'):
+      s.Contains({})
 
   def testDoesNotContain(self):
-    s = truth._IterableSubject((2, 5))
+    s = truth._IterableSubject((2, 5, []))
     s.DoesNotContain(3)
     s.DoesNotContain('2')
+    s.DoesNotContain({})
     with self.Failure('should not have contained <2>'):
       s.DoesNotContain(2)
     with self.Failure('should not have contained <5>'):
       s.DoesNotContain(5)
+    with self.Failure('should not have contained <[]>'):
+      s.DoesNotContain([])
 
   def testContainsNoDuplicates(self):
     truth._IterableSubject(()).ContainsNoDuplicates()
@@ -998,31 +1045,31 @@ class IterableSubjectTest(BaseTest):
       truth._IterableSubject((3, 2, 5, 2)).ContainsNoDuplicates()
 
   def testContainsAllIn(self):
-    s = truth._IterableSubject((3, 5, 8))
+    s = truth._IterableSubject((3, 5, []))
     self.assertIsInstance(s.ContainsAllIn(()), truth._InOrder)
     self.assertIsInstance(s.ContainsAllIn((3,)), truth._InOrder)
-    self.assertIsInstance(s.ContainsAllIn((3, 8)), truth._InOrder)
-    self.assertIsInstance(s.ContainsAllIn((3, 5, 8)), truth._InOrder)
-    self.assertIsInstance(s.ContainsAllIn((8, 3, 5)), truth._NotInOrder)
+    self.assertIsInstance(s.ContainsAllIn((3, [])), truth._InOrder)
+    self.assertIsInstance(s.ContainsAllIn((3, 5, [])), truth._InOrder)
+    self.assertIsInstance(s.ContainsAllIn(([], 3, 5)), truth._NotInOrder)
     with self.Failure('contains all elements', 'missing <[2]>'):
       s.ContainsAllIn((2, 3))
     with self.Failure('contains all elements', 'missing <[2, 6]>'):
       s.ContainsAllIn((2, 3, 6))
 
   def testContainsAllOf(self):
-    s = truth._IterableSubject((3, 5, 8))
+    s = truth._IterableSubject((3, 5, []))
     self.assertIsInstance(s.ContainsAllOf(), truth._InOrder)
     self.assertIsInstance(s.ContainsAllOf(3), truth._InOrder)
-    self.assertIsInstance(s.ContainsAllOf(3, 8), truth._InOrder)
-    self.assertIsInstance(s.ContainsAllOf(3, 5, 8), truth._InOrder)
-    self.assertIsInstance(s.ContainsAllOf(8, 3, 5), truth._NotInOrder)
+    self.assertIsInstance(s.ContainsAllOf(3, []), truth._InOrder)
+    self.assertIsInstance(s.ContainsAllOf(3, 5, []), truth._InOrder)
+    self.assertIsInstance(s.ContainsAllOf([], 3, 5), truth._NotInOrder)
     with self.Failure('contains all of', 'missing <[2]>'):
       s.ContainsAllOf(2, 3)
     with self.Failure('contains all of', 'missing <[2, 6]>'):
       s.ContainsAllOf(2, 3, 6)
 
   def testContainsAnyIn(self):
-    s = truth._IterableSubject((3, 5, 8))
+    s = truth._IterableSubject((3, 5, []))
     s.ContainsAnyIn((3,))
     s.ContainsAnyIn((7, 3))
     with self.Failure('contains any element in'):
@@ -1031,7 +1078,7 @@ class IterableSubjectTest(BaseTest):
       s.ContainsAnyIn((2, 6))
 
   def testContainsAnyOf(self):
-    s = truth._IterableSubject((3, 5, 8))
+    s = truth._IterableSubject((3, 5, []))
     s.ContainsAnyOf(3)
     s.ContainsAnyOf(7, 3)
     with self.Failure('contains any of'):
@@ -1040,29 +1087,30 @@ class IterableSubjectTest(BaseTest):
       s.ContainsAnyOf(2, 6)
 
   def testContainsExactly(self):
-    s = truth._IterableSubject((3, 5, 8))
-    self.assertIsInstance(s.ContainsExactly(3, 5, 8), truth._InOrder)
-    self.assertIsInstance(s.ContainsExactly(8, 3, 5), truth._NotInOrder)
+    s = truth._IterableSubject((3, 5, []))
+    self.assertIsInstance(s.ContainsExactly(3, 5, []), truth._InOrder)
+    self.assertIsInstance(s.ContainsExactly([], 3, 5), truth._NotInOrder)
     with self.Failure('contains exactly', 'is missing <[9]>'):
-      s.ContainsExactly(3, 5, 8, 9)
+      s.ContainsExactly(3, 5, [], 9)
     with self.Failure('contains exactly', 'is missing <[9, 10]>'):
-      s.ContainsExactly(9, 3, 5, 8, 10)
-    with self.Failure('contains exactly', 'has unexpected items <[8]>'):
+      s.ContainsExactly(9, 3, 5, [], 10)
+    with self.Failure('contains exactly', "has unexpected items <['[]']>"):
       s.ContainsExactly(3, 5)
     with self.Failure('contains exactly', 'has unexpected items <[5]>'):
-      s.ContainsExactly(8, 3)
-    with self.Failure('contains exactly', 'has unexpected items <[5, 8]>'):
+      s.ContainsExactly([], 3)
+    with self.Failure('contains exactly', "has unexpected items <[5, '[]']>"):
       s.ContainsExactly(3)
     with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
       s.ContainsExactly(4, 4)
     with self.Failure(
-        'contains exactly', 'is missing <[9]>', 'has unexpected items <[8]>'):
+        'contains exactly',
+        'is missing <[9]>', "has unexpected items <['[]']>"):
       s.ContainsExactly(3, 5, 9)
     with self.Failure(
         'contains exactly',
-        'is missing <[(3, 5, 8)]>',
+        "is missing <['(3, 5, [])']>",
         'often not the correct thing to do'):
-      s.ContainsExactly((3, 5, 8))
+      s.ContainsExactly((3, 5, []))
     with self.Failure('is empty'):
       s.ContainsExactly()
 
@@ -1073,48 +1121,50 @@ class IterableSubjectTest(BaseTest):
       s.ContainsExactly(3)
 
   def testContainsExactlyElementsIn(self):
-    s = truth._IterableSubject((3, 5, 8))
+    s = truth._IterableSubject((3, 5, []))
     self.assertIsInstance(
-        s.ContainsExactlyElementsIn((3, 5, 8)), truth._InOrder)
+        s.ContainsExactlyElementsIn((3, 5, [])), truth._InOrder)
     self.assertIsInstance(
-        s.ContainsExactlyElementsIn((8, 3, 5)), truth._NotInOrder)
+        s.ContainsExactlyElementsIn(([], 3, 5)), truth._NotInOrder)
     with self.Failure('contains exactly', 'is missing <[9]>'):
-      s.ContainsExactlyElementsIn((3, 5, 8, 9))
+      s.ContainsExactlyElementsIn((3, 5, [], 9))
     with self.Failure('contains exactly', 'is missing <[9, 10]>'):
-      s.ContainsExactlyElementsIn((9, 3, 5, 8, 10))
-    with self.Failure('contains exactly', 'has unexpected items <[8]>'):
+      s.ContainsExactlyElementsIn((9, 3, 5, [], 10))
+    with self.Failure('contains exactly', "has unexpected items <['[]']>"):
       s.ContainsExactlyElementsIn((3, 5))
     with self.Failure('contains exactly', 'has unexpected items <[5]>'):
-      s.ContainsExactlyElementsIn((8, 3))
-    with self.Failure('contains exactly', 'has unexpected items <[5, 8]>'):
+      s.ContainsExactlyElementsIn(([], 3))
+    with self.Failure('contains exactly', "has unexpected items <[5, '[]']>"):
       s.ContainsExactlyElementsIn((3,))
     with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
       s.ContainsExactlyElementsIn((4, 4))
     with self.Failure(
-        'contains exactly', 'is missing <[9]>', 'has unexpected items <[8]>'):
+        'contains exactly',
+        'is missing <[9]>', "has unexpected items <['[]']>"):
       s.ContainsExactlyElementsIn((3, 5, 9))
     with self.Failure('is empty'):
       s.ContainsExactlyElementsIn(())
 
   def testSequenceIsEqualToUsesContainsExactlyElementsInPlusInOrder(self):
-    s = truth._IterableSubject((3, 5, 8))
-    s.IsEqualTo((3, 5, 8))
-    with self.Failure('contains exactly', 'in order', '<(8, 3, 5)>'):
-      s.IsEqualTo((8, 3, 5))
+    s = truth._IterableSubject((3, 5, []))
+    s.IsEqualTo((3, 5, []))
+    with self.Failure('contains exactly', 'in order', '<([], 3, 5)>'):
+      s.IsEqualTo(([], 3, 5))
     with self.Failure('contains exactly', 'is missing <[9]>'):
-      s.IsEqualTo((3, 5, 8, 9))
+      s.IsEqualTo((3, 5, [], 9))
     with self.Failure('contains exactly', 'is missing <[9, 10]>'):
-      s.IsEqualTo((9, 3, 5, 8, 10))
-    with self.Failure('contains exactly', 'has unexpected items <[8]>'):
+      s.IsEqualTo((9, 3, 5, [], 10))
+    with self.Failure('contains exactly', "has unexpected items <['[]']>"):
       s.IsEqualTo((3, 5))
     with self.Failure('contains exactly', 'has unexpected items <[5]>'):
-      s.IsEqualTo((8, 3))
-    with self.Failure('contains exactly', 'has unexpected items <[5, 8]>'):
+      s.IsEqualTo(([], 3))
+    with self.Failure('contains exactly', "has unexpected items <[5, '[]']>"):
       s.IsEqualTo((3,))
     with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
       s.IsEqualTo((4, 4))
     with self.Failure(
-        'contains exactly', 'is missing <[9]>', 'has unexpected items <[8]>'):
+        'contains exactly',
+        'is missing <[9]>', "has unexpected items <['[]']>"):
       s.IsEqualTo((3, 5, 9))
     with self.Failure('is empty'):
       s.IsEqualTo(())
@@ -1144,7 +1194,7 @@ class IterableSubjectTest(BaseTest):
       s.IsEqualTo(set())
 
   def testSequenceIsEqualToComparedWithNonIterables(self):
-    s = truth._IterableSubject((3, 5, 8))
+    s = truth._IterableSubject((3, 5, []))
     with self.Failure('is equal to <3>'):
       s.IsEqualTo(3)
     with self.Failure('is equal to', 'DeclassifiedTestClass'):
@@ -1162,7 +1212,11 @@ class IterableSubjectTest(BaseTest):
     expected = DeclassifiedListTestClass()
     s.IsEqualTo(expected)
     expected.append(3)
-    with self.Failure('is equal to <[3]>'):
+    if six.PY2:
+      error = 'is equal to <[3]>'
+    else:
+      error = 'missing <[3]>'
+    with self.Failure(error):
       s.IsEqualTo(expected)
 
   def testContainsExactlyElementsInEmptyContainer(self):
@@ -1172,7 +1226,7 @@ class IterableSubjectTest(BaseTest):
       s.ContainsExactlyElementsIn((3,))
 
   def testContainsNoneIn(self):
-    s = truth._IterableSubject((3, 5, 8))
+    s = truth._IterableSubject((3, 5, []))
     s.ContainsNoneIn(())
     s.ContainsNoneIn((2,))
     s.ContainsNoneIn((2, 6))
@@ -1182,7 +1236,7 @@ class IterableSubjectTest(BaseTest):
       s.ContainsNoneIn((2, 5))
 
   def testContainsNoneOf(self):
-    s = truth._IterableSubject((3, 5, 8))
+    s = truth._IterableSubject((3, 5, []))
     s.ContainsNoneOf()
     s.ContainsNoneOf(2)
     s.ContainsNoneOf(2, 6)
@@ -1678,28 +1732,52 @@ class MockSubjectTest(BaseTest):
     with self.Failure():
       s.HasCalls([mock.call(10)])
     mock_sleep(10)
-    s.HasCalls([mock.call(10)])
+    self.assertIsInstance(s.HasCalls([mock.call(10)]), truth._InOrder)
 
   @mock.patch('time.sleep')
-  def testHasCallsMultipleCalls(self, mock_sleep):
+  def testHasCallsAnyOrderDefault(self, mock_sleep):
     s = truth._MockSubject(mock_sleep)
     mock_sleep(5)
-    mock_sleep(10)
-    s.HasCalls([mock.call(5), mock.call(10)])
     with self.Failure():
-      s.HasCalls([mock.call(10), mock.call(5)])
+      s.HasCalls([mock.call(5), mock.call(10)])
+    mock_sleep(10)
+    self.assertIsInstance(
+        s.HasCalls([mock.call(5), mock.call(10)]), truth._InOrder)
+    self.assertIsInstance(
+        s.HasCalls([mock.call(10), mock.call(5)]), truth._NotInOrder)
 
   @mock.patch('time.sleep')
-  def testHasCallsAnyOrder(self, mock_sleep):
+  def testHasCallsAnyOrderTrue(self, mock_sleep):
     s = truth._MockSubject(mock_sleep)
     mock_sleep(5)
+    with self.Failure():
+      s.HasCalls([mock.call(5), mock.call(10)], any_order=True)
     mock_sleep(10)
-    s.HasCalls([mock.call(5), mock.call(10)], any_order=True)
-    s.HasCalls([mock.call(10), mock.call(5)], any_order=True)
+    self.assertIsInstance(
+        s.HasCalls([mock.call(5), mock.call(10)], any_order=True),
+        truth._InOrder)
+    self.assertIsInstance(
+        s.HasCalls([mock.call(10), mock.call(5)], any_order=True),
+        truth._NotInOrder)
     with self.Failure():
-      s.HasCalls([mock.call(5), mock.call(7)])
+      s.HasCalls([mock.call(5), mock.call(7)], any_order=True)
     with self.Failure():
-      s.HasCalls([mock.call(7), mock.call(10)])
+      s.HasCalls([mock.call(7), mock.call(10)], any_order=True)
+
+  @mock.patch('time.sleep')
+  def testHasCallsAnyOrderFalse(self, mock_sleep):
+    s = truth._MockSubject(mock_sleep)
+    mock_sleep(5)
+    with self.Failure():
+      s.HasCalls([mock.call(5), mock.call(10)], any_order=False)
+    mock_sleep(10)
+    s.HasCalls([mock.call(5), mock.call(10)], any_order=False)
+    with self.Failure():
+      s.HasCalls([mock.call(10), mock.call(5)], any_order=False)
+    with self.Failure():
+      s.HasCalls([mock.call(5), mock.call(7)], any_order=False)
+    with self.Failure():
+      s.HasCalls([mock.call(7), mock.call(10)], any_order=False)
 
 
 class MockCalledSubjectTest(BaseTest):

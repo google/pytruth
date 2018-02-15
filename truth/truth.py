@@ -115,6 +115,10 @@ all, none, or some of the assertions may succeed or fail, arbitrarily.
 If you discover a concurrency bug, please report it or fix it.
 """
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import atexit
 import collections
 import contextlib
@@ -234,6 +238,17 @@ def _IsComparable(target):
   for attr in _COMPARABLE_ATTRS:
     if not hasattr(target, attr):
       return False
+  return True
+
+
+def _IsHashable(target):
+  """Returns True if the target is hashable."""
+  if not hasattr(target, '__hash__') or not target.__hash__:
+    return False
+  try:
+    hash(target)
+  except (TypeError, ValueError):
+    return False
   return True
 
 
@@ -883,15 +898,26 @@ class _IterableSubject(_DefaultSubject):
         index = actual_list.index(i)
         # Drain all the elements before that element into actual_not_in_order.
         for _ in six.moves.xrange(index):
-          actual_not_in_order.add(actual_list.pop(0))
+          actual_element = actual_list.pop(0)
+          if _IsHashable(actual_element):
+            actual_not_in_order.add(actual_element)
+          else:
+            if isinstance(actual_not_in_order, collections.Set):
+              actual_not_in_order = list(actual_not_in_order)
+            if actual_element not in actual_not_in_order:
+              actual_not_in_order.append(actual_element)
         # And remove the element from the actual_list.
         actual_list.pop(0)
+      # The expected value was not in the actual list.
       except ValueError:
-        try:
+        if (not _IsHashable(i)
+            and isinstance(actual_not_in_order, collections.Set)):
+          actual_not_in_order = list(actual_not_in_order)
+        if i in actual_not_in_order:
           actual_not_in_order.remove(i)
           # If it was in actual_not_in_order, we're not in order.
           ordered = False
-        except KeyError:
+        else:
           # It is not in actual_not_in_order, we're missing an expected element.
           missing.Increment(i)
 
@@ -925,9 +951,12 @@ class _IterableSubject(_DefaultSubject):
       return
 
     # Otherwise we know we have to check "in" self._actual at least twice,
-    # so optimize for time by converting it to a set first.
+    # so optimize for time by converting it to a set first, if possible.
     if expected:
-      actual_set = set(self._actual)
+      try:
+        actual_set = set(self._actual)
+      except TypeError:
+        actual_set = self._actual
       for i in expected:
         if i in actual_set:
           return
@@ -1070,9 +1099,12 @@ class _IterableSubject(_DefaultSubject):
         present.extend(excluded)
 
     # Otherwise we know we have to check "in" self._actual at least twice,
-    # so optimize for time by converting it to a set first.
+    # so optimize for time by converting it to a set first, if possible.
     elif excluded:
-      actual_set = set(self._actual)
+      try:
+        actual_set = set(self._actual)
+      except TypeError:
+        actual_set = self._actual
       for i in excluded:
         if i in actual_set:
           present.append(i)
@@ -1336,15 +1368,12 @@ class _MockAssertionConverter(_DefaultSubject):
   """
 
   @contextlib.contextmanager
-  def _WrapMockAssertions(self, include_actual=True):
+  def _WrapMockAssertions(self):
     try:
       yield
     except AssertionError as e:
-      if include_actual:
-        raise TruthAssertionError(
-            str(e) + '\nAll calls: {0}'.format(self._actual.mock_calls))
-      else:
-        raise TruthAssertionError(e)
+      raise TruthAssertionError(
+          str(e) + '\nAll calls: {0}'.format(self._actual.mock_calls))
 
 
 class _MockSubject(_MockAssertionConverter):
@@ -1368,8 +1397,11 @@ class _MockSubject(_MockAssertionConverter):
       AssertThat(mock_func).WasCalled().Once().With(*a, **k)  --OR--
       AssertThat(mock_func).WasCalled().With(*a, **k).Once()
 
-    mock_func.assert_has_calls(calls, any_order=any_order) ->
-      AssertThat(mock_func).HasCalls(calls, any_order=any_order)
+    mock_func.assert_has_calls(calls, any_order=True) ->
+      AssertThat(mock_func).HasCalls(calls)
+
+    mock_func.assert_has_calls(calls, any_order=False) ->
+      AssertThat(mock_func).HasCalls(calls).InOrder()
 
     mock_func.assert_any_call(*a, **k) ->
       AssertThat(mock_func).WasCalled().With(*a, **k)
@@ -1397,9 +1429,11 @@ class _MockSubject(_MockAssertionConverter):
     with self._WrapMockAssertions():
       self._actual.assert_not_called()
 
-  def HasCalls(self, calls, any_order=False):
-    with self._WrapMockAssertions(include_actual=False):
-      self._actual.assert_has_calls(calls, any_order=any_order)
+  def HasCalls(self, calls, any_order=None):
+    contains_all = AssertThat(self._actual.mock_calls).ContainsAllIn(calls)
+    if any_order or any_order is None:
+      return contains_all
+    return contains_all.InOrder()
 
 
 class _MockCalledSubject(_MockAssertionConverter):

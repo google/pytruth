@@ -1068,6 +1068,17 @@ class IterableSubjectTest(BaseTest):
     with self.Failure('contains all of', 'missing <[2, 6]>'):
       s.ContainsAllOf(2, 3, 6)
 
+  def testContainsAllMixedHashableElements(self):
+    s = truth._IterableSubject((3, [], 5, 8))
+    self.assertIsInstance(s.ContainsAllOf(3, [], 5, 8), truth._InOrder)
+    self.assertIsInstance(s.ContainsAllOf(5, 3, 8, []), truth._NotInOrder)
+    with self.Failure('contains all of', 'missing <[9]>'):
+      s.ContainsAllOf(3, [], 8, 5, 9)
+    with self.Failure('contains all of', "missing <['{}']>"):
+      s.ContainsAllOf(3, [], 8, 5, {})
+    with self.Failure('contains all of', 'missing <[9]>'):
+      s.ContainsAllOf(8, 3, [], 9, 5)
+
   def testContainsAnyIn(self):
     s = truth._IterableSubject((3, 5, []))
     s.ContainsAnyIn((3,))

@@ -899,7 +899,8 @@ class _IterableSubject(_DefaultSubject):
         # Drain all the elements before that element into actual_not_in_order.
         for _ in six.moves.xrange(index):
           actual_element = actual_list.pop(0)
-          if _IsHashable(actual_element):
+          if (_IsHashable(actual_element)
+              and isinstance(actual_not_in_order, collections.Set)):
             actual_not_in_order.add(actual_element)
           else:
             if isinstance(actual_not_in_order, collections.Set):

@@ -1223,11 +1223,7 @@ class IterableSubjectTest(BaseTest):
     expected = DeclassifiedListTestClass()
     s.IsEqualTo(expected)
     expected.append(3)
-    if six.PY2:
-      error = 'is equal to <[3]>'
-    else:
-      error = 'missing <[3]>'
-    with self.Failure(error):
+    with self.Failure('is equal to <[3]>'):
       s.IsEqualTo(expected)
 
   def testContainsExactlyElementsInEmptyContainer(self):
@@ -1301,6 +1297,7 @@ class IterableSubjectTest(BaseTest):
     mock_sleep(5)
     s = truth._IterableSubject(mock_sleep.call_args_list[0])
     s.IsEqualTo(mock.call(5))
+
 
 class OrderedTest(unittest.TestCase):
 
@@ -1789,6 +1786,23 @@ class MockSubjectTest(BaseTest):
       s.HasCalls([mock.call(5), mock.call(7)], any_order=False)
     with self.Failure():
       s.HasCalls([mock.call(7), mock.call(10)], any_order=False)
+
+  @mock.patch('time.sleep')
+  def testHasExactlyCalls(self, mock_sleep):
+    s = truth._MockSubject(mock_sleep)
+    with self.Failure():
+      s.HasExactlyCalls(mock.call(5))
+    mock_sleep(5)
+    self.assertIsInstance(s.HasExactlyCalls(mock.call(5)), truth._InOrder)
+    mock_sleep(10)
+    self.assertIsInstance(
+        s.HasExactlyCalls(mock.call(5), mock.call(10)), truth._InOrder)
+    self.assertIsInstance(
+        s.HasExactlyCalls(mock.call(10), mock.call(5)), truth._NotInOrder)
+    with self.Failure("unexpected items <['call(10)']>"):
+      s.HasExactlyCalls(mock.call(5))
+    with self.Failure("missing <['call(7)']>"):
+      s.HasExactlyCalls(mock.call(5), mock.call(7), mock.call(10))
 
 
 class MockCalledSubjectTest(BaseTest):

@@ -1436,6 +1436,9 @@ class _MockSubject(_MockAssertionConverter):
       return contains_all
     return contains_all.InOrder()
 
+  def HasExactlyCalls(self, *calls):
+    return AssertThat(self._actual.mock_calls).ContainsExactlyElementsIn(calls)
+
 
 class _MockCalledSubject(_MockAssertionConverter):
   """Subject for a mock already asserted [not] to have been called."""

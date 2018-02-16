@@ -295,6 +295,8 @@ unittest                                            | PyTruth
 `m.assert_called_once_with(*a, **k)`                | `AssertThat(m).WasCalled().Once().With(*a, **k)` `AssertThat(m).WasCalled().With(*a, **k).Once()`
 `m.assert_has_calls(calls,`&nbsp;`any_order=True)`  | `AssertThat(m).HasCalls(calls)`
 `m.assert_has_calls(calls,`&nbsp;`any_order=False)` | `AssertThat(m).HasCalls(calls).InOrder()`
+N/A                                                 | `AssertThat(m).HasExactlyCalls(c1, c2)`
+N/A                                                 | `AssertThat(m).HasExactlyCalls(c1, c2).InOrder()`
 `m.assert_any_call(*a, **k)`                        | `AssertThat(m).WasCalled().With(*a, **k)`
 
 #### Being called once, with arguments

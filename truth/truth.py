@@ -1430,13 +1430,72 @@ class _MockSubject(_MockAssertionConverter):
     with self._WrapMockAssertions():
       self._actual.assert_not_called()
 
-  def HasCalls(self, calls, any_order=None):
+  def HasCalls(self, *calls, **kwargs):
+    """Assert that the mocked function was called with all the given calls.
+
+    Args:
+      *calls: iterable of mock.call objects. Developers may also pass a single
+          iterable of mock.call objects, for compatibility with mock's
+          assert_has_calls() method, although this form is not preferred.
+      **kwargs: optional parameters. The only recognized parameter is any_order:
+          If any_order=True, the assertion succeeds if the mocked function was
+              called with all the given calls, regardless of the call order.
+          If any_order=False, the assertion succeeds if the mocked function was
+              called with all of the given calls in the given order.
+          If any_order is omitted, it behaves like any_order=True. This is the
+              preferred way of calling HasCalls(). Developers who wish to
+              enforce an order should call InOrder() on the returned predicate.
+              If the order is unimportant, simply omit the InOrder() call.
+              This is an intentional divergence from the mock library's syntax.
+
+    Returns:
+      If any_order is True or omitted, and the mocked function was called all of
+          with the expected calls, returns an _Ordered predicate on which
+          .InOrder() can be subsequently called.
+      If any_order=False, invokes the InOrder() predicate and returns its value.
+
+    Raises:
+      TruthAssertionError: the mocked function is missing any of the expected
+          calls.
+    """
+    # If the caller passed an iterable of mock.call objects, expand them.
+    # mock.call objects are themselves iterable, hence the third condition.
+    if (len(calls) == 1 and _IsIterable(calls[0])
+        # pylint: disable=protected-access
+        and not isinstance(calls[0], mock._Call)):
+        # pylint: enable=protected-access
+      calls = calls[0]
+
     contains_all = AssertThat(self._actual.mock_calls).ContainsAllIn(calls)
+    any_order = kwargs.get('any_order')
     if any_order or any_order is None:
       return contains_all
     return contains_all.InOrder()
 
   def HasExactlyCalls(self, *calls):
+    """Assert that the mocked function was called with exactly the given calls.
+
+    Args:
+      *calls: iterable of mock.call objects. Developers may also pass a single
+          iterable of mock.call objects, for compatibility with mock's
+          assert_has_calls() method, although this form is not preferred.
+
+    Returns:
+      If the mocked function was called exactly with the expected calls, returns
+      an _Ordered predicate on which .InOrder() can be subsequently called.
+
+    Raises:
+      TruthAssertionError: the mocked function is missing any of the expected
+          calls, or it contains any call not in the expected calls.
+    """
+    # If the caller passed an iterable of mock.call objects, expand them.
+    # mock.call objects are themselves iterable, hence the third condition.
+    if (len(calls) == 1 and _IsIterable(calls[0])
+        # pylint: disable=protected-access
+        and not isinstance(calls[0], mock._Call)):
+        # pylint: enable=protected-access
+      calls = calls[0]
+
     return AssertThat(self._actual.mock_calls).ContainsExactlyElementsIn(calls)
 
 

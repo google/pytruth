@@ -1738,8 +1738,12 @@ class MockSubjectTest(BaseTest):
   def testHasCallsSingleCall(self, mock_sleep):
     s = truth._MockSubject(mock_sleep)
     with self.Failure():
+      s.HasCalls(mock.call(10))
+    with self.Failure():
       s.HasCalls([mock.call(10)])
+
     mock_sleep(10)
+    self.assertIsInstance(s.HasCalls(mock.call(10)), truth._InOrder)
     self.assertIsInstance(s.HasCalls([mock.call(10)]), truth._InOrder)
 
   @mock.patch('time.sleep')
@@ -1747,8 +1751,15 @@ class MockSubjectTest(BaseTest):
     s = truth._MockSubject(mock_sleep)
     mock_sleep(5)
     with self.Failure():
+      s.HasCalls(mock.call(5), mock.call(10))
+    with self.Failure():
       s.HasCalls([mock.call(5), mock.call(10)])
+
     mock_sleep(10)
+    self.assertIsInstance(
+        s.HasCalls(mock.call(5), mock.call(10)), truth._InOrder)
+    self.assertIsInstance(
+        s.HasCalls(mock.call(10), mock.call(5)), truth._NotInOrder)
     self.assertIsInstance(
         s.HasCalls([mock.call(5), mock.call(10)]), truth._InOrder)
     self.assertIsInstance(
@@ -1759,14 +1770,29 @@ class MockSubjectTest(BaseTest):
     s = truth._MockSubject(mock_sleep)
     mock_sleep(5)
     with self.Failure():
+      s.HasCalls(mock.call(5), mock.call(10), any_order=True)
+    with self.Failure():
       s.HasCalls([mock.call(5), mock.call(10)], any_order=True)
+
     mock_sleep(10)
+    self.assertIsInstance(
+        s.HasCalls(mock.call(5), mock.call(10), any_order=True),
+        truth._InOrder)
     self.assertIsInstance(
         s.HasCalls([mock.call(5), mock.call(10)], any_order=True),
         truth._InOrder)
     self.assertIsInstance(
+        s.HasCalls(mock.call(10), mock.call(5), any_order=True),
+        truth._NotInOrder)
+    self.assertIsInstance(
         s.HasCalls([mock.call(10), mock.call(5)], any_order=True),
         truth._NotInOrder)
+
+    with self.Failure():
+      s.HasCalls(mock.call(5), mock.call(7), any_order=True)
+    with self.Failure():
+      s.HasCalls(mock.call(7), mock.call(10), any_order=True)
+
     with self.Failure():
       s.HasCalls([mock.call(5), mock.call(7)], any_order=True)
     with self.Failure():
@@ -1777,9 +1803,21 @@ class MockSubjectTest(BaseTest):
     s = truth._MockSubject(mock_sleep)
     mock_sleep(5)
     with self.Failure():
+      s.HasCalls(mock.call(5), mock.call(10), any_order=False)
+    with self.Failure():
       s.HasCalls([mock.call(5), mock.call(10)], any_order=False)
+
     mock_sleep(10)
+    s.HasCalls(mock.call(5), mock.call(10), any_order=False)
     s.HasCalls([mock.call(5), mock.call(10)], any_order=False)
+
+    with self.Failure():
+      s.HasCalls(mock.call(10), mock.call(5), any_order=False)
+    with self.Failure():
+      s.HasCalls(mock.call(5), mock.call(7), any_order=False)
+    with self.Failure():
+      s.HasCalls(mock.call(7), mock.call(10), any_order=False)
+
     with self.Failure():
       s.HasCalls([mock.call(10), mock.call(5)], any_order=False)
     with self.Failure():
@@ -1792,17 +1830,31 @@ class MockSubjectTest(BaseTest):
     s = truth._MockSubject(mock_sleep)
     with self.Failure():
       s.HasExactlyCalls(mock.call(5))
+    with self.Failure():
+      s.HasExactlyCalls([mock.call(5)])
+
     mock_sleep(5)
     self.assertIsInstance(s.HasExactlyCalls(mock.call(5)), truth._InOrder)
+    self.assertIsInstance(s.HasExactlyCalls([mock.call(5)]), truth._InOrder)
+
     mock_sleep(10)
     self.assertIsInstance(
         s.HasExactlyCalls(mock.call(5), mock.call(10)), truth._InOrder)
     self.assertIsInstance(
         s.HasExactlyCalls(mock.call(10), mock.call(5)), truth._NotInOrder)
+    self.assertIsInstance(
+        s.HasExactlyCalls([mock.call(5), mock.call(10)]), truth._InOrder)
+    self.assertIsInstance(
+        s.HasExactlyCalls([mock.call(10), mock.call(5)]), truth._NotInOrder)
+
     with self.Failure("unexpected items <['call(10)']>"):
       s.HasExactlyCalls(mock.call(5))
     with self.Failure("missing <['call(7)']>"):
       s.HasExactlyCalls(mock.call(5), mock.call(7), mock.call(10))
+    with self.Failure("unexpected items <['call(10)']>"):
+      s.HasExactlyCalls([mock.call(5)])
+    with self.Failure("missing <['call(7)']>"):
+      s.HasExactlyCalls([mock.call(5), mock.call(7), mock.call(10)])
 
 
 class MockCalledSubjectTest(BaseTest):

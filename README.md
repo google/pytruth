@@ -292,7 +292,8 @@ unittest                                            | PyTruth
 `m.assert_called_once()`                            | `AssertThat(m).WasCalled().Once()`
 `assertEqual(m.call_count, n)`                      | `AssertThat(m).WasCalled().Times(n)`
 `m.assert_called_with(*a, **k)`                     | `AssertThat(m).WasCalled().LastWith(*a, **k)`
-`m.assert_called_once_with(*a, **k)`                | `AssertThat(m).WasCalled().Once().With(*a, **k)` `AssertThat(m).WasCalled().With(*a, **k).Once()`
+`m.assert_called_once_with(*a, **k)`                | `AssertThat(m).WasCalled().Once().With(*a, **k)`
+N/A                                                 | `AssertThat(m).WasCalled().With(*a, **k).Once()`
 `m.assert_has_calls(calls,`&nbsp;`any_order=True)`  | `AssertThat(m).HasCalls(calls)`
 `m.assert_has_calls(calls,`&nbsp;`any_order=False)` | `AssertThat(m).HasCalls(calls).InOrder()`
 N/A                                                 | `AssertThat(m).HasExactlyCalls(c1, c2)`
@@ -302,11 +303,12 @@ N/A                                                 | `AssertThat(m).HasExactlyC
 #### Being called once, with arguments
 
 The `WasCalled().Once().With(...)` and `WasCalled().With(...).Once()` assertions
-are equivalent, and they assert that the function was called one time ever,
-and that one time it was called, it was passed those arguments.
-The underlying mock library is incapable of asserting a different English
-interpretation wherein the function was passed those arguments exactly once,
-but is permitted to have been called with other, irrelevant arguments.
+are subtly different. `WasCalled().Once().With(...)` asserts that the function
+was called one time ever, and that one time it was called, it was passed those
+arguments. `WasCalled().With(...).Once()` asserts that the function was passed
+those arguments exactly once, but it is permitted to have been called with
+other, irrelevant arguments. Thus, `WasCalled().Once().With(...)` is the
+stricter assertion. Consider using `HasExactlyCalls()` for more clarity.
 
 ### Classes
 unittest                      | PyTruth

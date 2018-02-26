@@ -406,6 +406,20 @@ class IsNumericTest(unittest.TestCase):
     self.assertFalse(truth._IsNumeric(mock_time))
 
 
+class DescribeTimesTest(unittest.TestCase):
+
+  def testOnce(self):
+    self.assertEqual(truth._DescribeTimes(1), 'once')
+    self.assertEqual(truth._DescribeTimes(1.0), 'once')
+
+  def testAnythingButOne(self):
+    self.assertEqual(truth._DescribeTimes(-1), '-1 times')
+    self.assertEqual(truth._DescribeTimes(0), '0 times')
+    self.assertEqual(truth._DescribeTimes(2), '2 times')
+    self.assertEqual(truth._DescribeTimes(263), '263 times')
+    self.assertEqual(truth._DescribeTimes(29.35), '29.35 times')
+
+
 class AllowUnresolvedSubjects(unittest.TestCase):
   """Children of this test class may create unresolved subjects.
 
@@ -1731,7 +1745,10 @@ class MockSubjectTest(BaseTest):
     s = truth._MockSubject(mock_sleep)
     s.WasNotCalled()
     mock_sleep(10)
-    with self.Failure(self.ALL_CALLS, '[call(10)]'):
+    with self.Failure(self.ALL_CALLS, 'once', '[call(10)]'):
+      s.WasNotCalled()
+    mock_sleep(5)
+    with self.Failure(self.ALL_CALLS, '2 times', '[call(10), call(5)]'):
       s.WasNotCalled()
 
   @mock.patch('time.sleep')
@@ -1864,26 +1881,28 @@ class MockCalledSubjectTest(BaseTest):
   @mock.patch('time.sleep')
   def testOnce(self, mock_sleep):
     s = truth._MockCalledSubject(mock_sleep)
-    with self.Failure(self.ALL_CALLS, '[]'):
+    with self.Failure(self.ALL_CALLS, 'once', '0 times', '[]'):
       s.Once()
     mock_sleep(10)
     s.Once()
     mock_sleep(10)
-    with self.Failure(self.ALL_CALLS, '[call(10), call(10)]'):
+    with self.Failure(self.ALL_CALLS, 'once', '2 times',
+                      '[call(10), call(10)]'):
       s.Once()
 
   @mock.patch('time.sleep')
   def testTimes(self, mock_sleep):
     s = truth._MockCalledSubject(mock_sleep)
-    with self.Failure(self.ALL_CALLS, '[]'):
+    with self.Failure(self.ALL_CALLS, '2 times', '0 times', '[]'):
       s.Times(2)
     mock_sleep(10)
-    with self.Failure(self.ALL_CALLS, '[call(10)]'):
+    with self.Failure(self.ALL_CALLS, '2 times', 'once', '[call(10)]'):
       s.Times(2)
     mock_sleep(10)
     s.Times(2)
     mock_sleep(10)
-    with self.Failure(self.ALL_CALLS, '[call(10), call(10), call(10)]'):
+    with self.Failure(self.ALL_CALLS, '2 times', '3 times',
+                      '[call(10), call(10), call(10)]'):
       s.Times(2)
 
   @mock.patch('time.sleep')
@@ -1892,10 +1911,10 @@ class MockCalledSubjectTest(BaseTest):
     with self.Failure(self.ALL_CALLS, '[]'):
       s.With(10)
     mock_sleep(10)
-    s.With(10)
+    self.assertIsInstance(s.With(10), truth._MockCalledWithSubject)
     mock_sleep(5)
-    s.With(5)
-    s.With(10)
+    self.assertIsInstance(s.With(5), truth._MockCalledWithSubject)
+    self.assertIsInstance(s.With(10), truth._MockCalledWithSubject)
 
   @mock.patch('time.sleep')
   def testLastWith(self, mock_sleep):
@@ -1908,6 +1927,45 @@ class MockCalledSubjectTest(BaseTest):
     s.LastWith(5)
     with self.Failure(self.ALL_CALLS, '[call(10), call(5)]'):
       s.LastWith(10)
+
+
+class MockCalledWithSubjectTest(BaseTest):
+
+  ALL_CALLS = 'All calls: '
+
+  @mock.patch('time.sleep')
+  def testOnce(self, mock_sleep):
+    s = truth._MockCalledWithSubject(mock_sleep, mock.call(5))
+    with self.Failure(self.ALL_CALLS, 'once', '0 times', '[]'):
+      s.Once()
+    mock_sleep(5)
+    s.Once()
+    mock_sleep(10)
+    s.Once()
+    mock_sleep(5)
+    with self.Failure(self.ALL_CALLS, 'once', '2 times',
+                      '[call(5), call(10), call(5)]'):
+      s.Once()
+
+  @mock.patch('time.sleep')
+  def testTimes(self, mock_sleep):
+    s = truth._MockCalledWithSubject(mock_sleep, mock.call(5))
+    with self.Failure(self.ALL_CALLS, '2 times', '0 times', '[]'):
+      s.Times(2)
+    mock_sleep(5)
+    with self.Failure(self.ALL_CALLS, '2 times', 'once', '[call(5)]'):
+      s.Times(2)
+    mock_sleep(10)
+    with self.Failure(self.ALL_CALLS, '2 times', 'once', '[call(5), call(10)]'):
+      s.Times(2)
+    mock_sleep(5)
+    s.Times(2)
+    mock_sleep(10)
+    s.Times(2)
+    mock_sleep(5)
+    with self.Failure(self.ALL_CALLS, '2 times', '3 times',
+                      '[call(5), call(10), call(5), call(10), call(5)]'):
+      s.Times(2)
 
 
 class NoneSubjectTest(BaseTest):

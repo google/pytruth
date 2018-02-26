@@ -75,9 +75,9 @@ Subject class hierarchy:
     |     |-- _ComparableSubject
     |     |     `-- _NumericSubject
     |     |-- _IterableSubject
-    |     `-- _MockAssertionConverter
-    |           |-- _MockSubject
-    |           `-- _MockCalledSubject
+    |     |-- _MockSubject
+    |     |-- _MockCalledSubject
+    |     `-- _MockCalledWithSubject
     |
     |-- _Ordered
     |     |-- _InOrder
@@ -276,6 +276,10 @@ def _IsNumeric(target):
     return isinstance(target, numbers.Number)
   except (AttributeError, TypeError):
     return False
+
+
+def _DescribeTimes(times):
+  return 'once' if times == 1 else '{0} times'.format(times)
 
 
 class _EmptySubject(object):
@@ -1358,26 +1362,7 @@ class _StringSubject(_ComparableIterableSubject):
           'should not have contained a match for <{0}>'.format(r.pattern))
 
 
-class _MockAssertionConverter(_DefaultSubject):
-  """Traps and converts assertions from a mock function to TruthAssertionError.
-
-  This coerces all exceptions thrown by this module to the same type.
-
-  Example usage:
-    with self._WrapMockAssertions():
-      mock_func.assert_called()
-  """
-
-  @contextlib.contextmanager
-  def _WrapMockAssertions(self):
-    try:
-      yield
-    except AssertionError as e:
-      raise TruthAssertionError(
-          str(e) + '\nAll calls: {0}'.format(self._actual.mock_calls))
-
-
-class _MockSubject(_MockAssertionConverter):
+class _MockSubject(_DefaultSubject):
   """Subject for functions mocked by "mock".
 
   Conversion recipes from mock to Truth:
@@ -1395,8 +1380,7 @@ class _MockSubject(_MockAssertionConverter):
       AssertThat(mock_func).WasCalled().LastWith(*a, **k)
 
     mock_func.assert_called_once_with(*a, **k) ->
-      AssertThat(mock_func).WasCalled().Once().With(*a, **k)  --OR--
-      AssertThat(mock_func).WasCalled().With(*a, **k).Once()
+      AssertThat(mock_func).WasCalled().Once().With(*a, **k)
 
     mock_func.assert_has_calls(calls, any_order=True) ->
       AssertThat(mock_func).HasCalls(calls)
@@ -1408,11 +1392,12 @@ class _MockSubject(_MockAssertionConverter):
       AssertThat(mock_func).WasCalled().With(*a, **k)
 
   Note that the WasCalled().Once().With(...) and WasCalled().With(...).Once()
-  assertions are equivalent, and they assert that the function was called one
-  time ever, and that one time it was called, it was passed those arguments.
-  The mock library is incapable of asserting a different English interpretation
-  wherein the function was passed those arguments exactly once, but is permitted
-  to have been called with other, irrelevant arguments.
+  assertions are subtly different. WasCalled().Once().With(...) asserts that the
+  function was called one time ever, and that one time it was called, it was
+  passed those arguments. WasCalled().With(...).Once() asserts that the function
+  was passed those arguments exactly once, but it is permitted to have been
+  called with other, irrelevant arguments. Thus, WasCalled().Once().With(...)
+  is the stricter assertion. Consider using HasExactlyCalls() for more clarity.
 
   Mock subjects can also be used to make value assertions. For example:
 
@@ -1421,14 +1406,27 @@ class _MockSubject(_MockAssertionConverter):
     AssertThat(actual_mock).IsSameAs(expected_mock)
   """
 
+  def __init__(self, actual):
+    super(_MockSubject, self).__init__(actual)
+    if hasattr(actual, '_mock_name'):
+      self.Named(getattr(actual, '_mock_name'))
+    else:
+      self.Named('mock')
+
   def WasCalled(self):
-    with self._WrapMockAssertions():
-      self._actual.assert_called()
+    if not self._actual.call_count:
+      self._Fail(
+          "Expected '{0}' to have been called, but it was not.\nAll calls: {1}"
+          .format(self._name, self._actual.mock_calls))
     return _MockCalledSubject(self._actual)
 
   def WasNotCalled(self):
-    with self._WrapMockAssertions():
-      self._actual.assert_not_called()
+    if self._actual.call_count:
+      self._Fail(
+          "Expected '{0}' not to have been called, but it was called {1}.\n"
+          'All calls: {2}'
+          .format(self._name, _DescribeTimes(self._actual.call_count),
+                  self._actual.mock_calls))
 
   def HasCalls(self, *calls, **kwargs):
     """Assert that the mocked function was called with all the given calls.
@@ -1499,39 +1497,68 @@ class _MockSubject(_MockAssertionConverter):
     return AssertThat(self._actual.mock_calls).ContainsExactlyElementsIn(calls)
 
 
-class _MockCalledSubject(_MockAssertionConverter):
+class _MockCalledSubject(_DefaultSubject):
   """Subject for a mock already asserted [not] to have been called."""
 
   def __init__(self, actual):
     super(_MockCalledSubject, self).__init__(actual)
-    self._Resolve()
+    self._Resolve()      # Allow AssertThat(m).WasCalled().
 
   def Once(self):
-    with self._WrapMockAssertions():
-      self._actual.assert_called_once()
-    return self
+    return self.Times(1)
 
   def Times(self, expected):
     """Asserts that the mock was called an expected number of times."""
     if self._actual.call_count != expected:
-      # pylint: disable=protected-access
-      name = self._actual._mock_name or 'mock'
-      # pylint: enable=protected-access
       self._Fail(
-          "Expected '{0}' to have been called {1} times. Called {2} times.\n"
+          "Expected '{0}' to have been called {1}. Called {2}.\n"
           "All calls: {3}"
-          .format(name, expected, self._actual.call_count,
+          .format(self._name,
+                  _DescribeTimes(expected),
+                  _DescribeTimes(self._actual.call_count),
                   self._actual.mock_calls))
     return self
 
   def With(self, *args, **kwargs):
-    with self._WrapMockAssertions():
-      self._actual.assert_any_call(*args, **kwargs)
-    return self
+    call = mock.call(*args, **kwargs)
+    if call not in self._actual.mock_calls:
+      self._Fail(
+          "Expected '{0}' to have been called with {1}, but it was not.\n"
+          'All calls: {2}'
+          .format(self._name, call, self._actual.mock_calls))
+    return _MockCalledWithSubject(self._actual, call)
 
   def LastWith(self, *args, **kwargs):
-    with self._WrapMockAssertions():
-      self._actual.assert_called_with(*args, **kwargs)
+    if (self._actual.call_args is None
+        or self._actual.call_args != (args, kwargs)):
+      self._Fail(
+          "Expected '{0}' to have last been called with {1}, but it was not.\n"
+          'All calls: {2}'
+          .format(self._name, mock.call(*args, **kwargs),
+                  self._actual.mock_calls))
+
+
+class _MockCalledWithSubject(_DefaultSubject):
+  """Subject for a mock that was called with a specified set of arguments."""
+
+  def __init__(self, actual, call):
+    super(_MockCalledWithSubject, self).__init__(actual)
+    self._call = call
+    self._Resolve()      # Allow AssertThat(m).WasCalled().With(...).
+
+  def Once(self):
+    self.Times(1)
+
+  def Times(self, expected):
+    actual_call_count = self._actual.mock_calls.count(self._call)
+    if actual_call_count != expected:
+      self._Fail(
+          "Expected '{0}' to have been called with {1} {2}. Called {3}.\n"
+          'All calls: {4}'
+          .format(self._name, self._call,
+                  _DescribeTimes(expected),
+                  _DescribeTimes(actual_call_count),
+                  self._actual.mock_calls))
 
 
 class _NoneSubject(

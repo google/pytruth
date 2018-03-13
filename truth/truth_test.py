@@ -441,6 +441,10 @@ class EmptySubjectTest(BaseTest, AllowUnresolvedSubjects):
     s = truth._EmptySubject(True).Named('thing')
     self.assertEqual(s._GetSubject(), 'thing(<True>)')
 
+  def testGetNamedSubjectNameProperty(self):
+    s = truth._EmptySubject(True).Named('thing')
+    self.assertEqual(s.name, 'thing')
+
   def testFailComparingValues(self):
     s = truth._EmptySubject(5)
     with self.Failure('Not true that <5> is equal to <3>.'):
@@ -1726,6 +1730,24 @@ class StringSubjectTest(BaseTest):
       s.DoesNotContainMatch(re.compile(r'.b'))
     with self.Failure('should not have contained a match for <A>'):
       s.DoesNotContainMatch(re.compile(r'A', re.I))
+
+
+class NamedMockSubjectTest(BaseTest):
+
+  @mock.patch('time.sleep')
+  def testInitSetsName(self, mock_sleep):
+    s = truth._NamedMockSubject(mock_sleep)
+    self.assertEqual(s.name, 'sleep')
+
+  @mock.patch('time.sleep')
+  def testDefaultNameIsMock(self, mock_sleep):
+    mock_sleep._mock_name = None
+    s = truth._NamedMockSubject(mock_sleep)
+    self.assertEqual(s.name, 'mock')
+
+  def testMissingNameUsesDefaultName(self):
+    s = truth._NamedMockSubject(object())
+    self.assertEqual(s.name, 'mock')
 
 
 class MockSubjectTest(BaseTest):

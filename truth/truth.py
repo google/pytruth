@@ -75,9 +75,10 @@ Subject class hierarchy:
     |     |-- _ComparableSubject
     |     |     `-- _NumericSubject
     |     |-- _IterableSubject
-    |     |-- _MockSubject
-    |     |-- _MockCalledSubject
-    |     `-- _MockCalledWithSubject
+    |     |-- _NamedMockSubject
+    |           |-- _MockSubject
+    |           |-- _MockCalledSubject
+    |           `-- _MockCalledWithSubject
     |
     |-- _Ordered
     |     |-- _InOrder
@@ -331,6 +332,10 @@ class _EmptySubject(object):
     """
     self._name = name
     return self
+
+  @property
+  def name(self):
+    return self._name
 
   @property
   def _actual(self):
@@ -1362,7 +1367,18 @@ class _StringSubject(_ComparableIterableSubject):
           'should not have contained a match for <{0}>'.format(r.pattern))
 
 
-class _MockSubject(_DefaultSubject):
+class _NamedMockSubject(_DefaultSubject):
+  """Subject for functions mocked by "mock", which set their "name" property."""
+
+  def __init__(self, actual):
+    super(_NamedMockSubject, self).__init__(actual)
+    if hasattr(actual, '_mock_name'):
+      self.Named(getattr(actual, '_mock_name') or 'mock')
+    else:
+      self.Named('mock')
+
+
+class _MockSubject(_NamedMockSubject):
   """Subject for functions mocked by "mock".
 
   Conversion recipes from mock to Truth:
@@ -1406,18 +1422,11 @@ class _MockSubject(_DefaultSubject):
     AssertThat(actual_mock).IsSameAs(expected_mock)
   """
 
-  def __init__(self, actual):
-    super(_MockSubject, self).__init__(actual)
-    if hasattr(actual, '_mock_name'):
-      self.Named(getattr(actual, '_mock_name'))
-    else:
-      self.Named('mock')
-
   def WasCalled(self):
     if not self._actual.call_count:
       self._Fail(
           "Expected '{0}' to have been called, but it was not.\nAll calls: {1}"
-          .format(self._name, self._actual.mock_calls))
+          .format(self.name, self._actual.mock_calls))
     return _MockCalledSubject(self._actual)
 
   def WasNotCalled(self):
@@ -1425,7 +1434,7 @@ class _MockSubject(_DefaultSubject):
       self._Fail(
           "Expected '{0}' not to have been called, but it was called {1}.\n"
           'All calls: {2}'
-          .format(self._name, _DescribeTimes(self._actual.call_count),
+          .format(self.name, _DescribeTimes(self._actual.call_count),
                   self._actual.mock_calls))
 
   def HasCalls(self, *calls, **kwargs):
@@ -1497,7 +1506,7 @@ class _MockSubject(_DefaultSubject):
     return AssertThat(self._actual.mock_calls).ContainsExactlyElementsIn(calls)
 
 
-class _MockCalledSubject(_DefaultSubject):
+class _MockCalledSubject(_NamedMockSubject):
   """Subject for a mock already asserted [not] to have been called."""
 
   def __init__(self, actual):
@@ -1513,7 +1522,7 @@ class _MockCalledSubject(_DefaultSubject):
       self._Fail(
           "Expected '{0}' to have been called {1}. Called {2}.\n"
           "All calls: {3}"
-          .format(self._name,
+          .format(self.name,
                   _DescribeTimes(expected),
                   _DescribeTimes(self._actual.call_count),
                   self._actual.mock_calls))
@@ -1525,7 +1534,7 @@ class _MockCalledSubject(_DefaultSubject):
       self._Fail(
           "Expected '{0}' to have been called with {1}, but it was not.\n"
           'All calls: {2}'
-          .format(self._name, call, self._actual.mock_calls))
+          .format(self.name, call, self._actual.mock_calls))
     return _MockCalledWithSubject(self._actual, call)
 
   def LastWith(self, *args, **kwargs):
@@ -1534,11 +1543,11 @@ class _MockCalledSubject(_DefaultSubject):
       self._Fail(
           "Expected '{0}' to have last been called with {1}, but it was not.\n"
           'All calls: {2}'
-          .format(self._name, mock.call(*args, **kwargs),
+          .format(self.name, mock.call(*args, **kwargs),
                   self._actual.mock_calls))
 
 
-class _MockCalledWithSubject(_DefaultSubject):
+class _MockCalledWithSubject(_NamedMockSubject):
   """Subject for a mock that was called with a specified set of arguments."""
 
   def __init__(self, actual, call):
@@ -1555,7 +1564,7 @@ class _MockCalledWithSubject(_DefaultSubject):
       self._Fail(
           "Expected '{0}' to have been called with {1} {2}. Called {3}.\n"
           'All calls: {4}'
-          .format(self._name, self._call,
+          .format(self.name, self._call,
                   _DescribeTimes(expected),
                   _DescribeTimes(actual_call_count),
                   self._actual.mock_calls))

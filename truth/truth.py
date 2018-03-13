@@ -75,7 +75,7 @@ Subject class hierarchy:
     |     |-- _ComparableSubject
     |     |     `-- _NumericSubject
     |     |-- _IterableSubject
-    |     |-- _NamedMockSubject
+    |     `-- _NamedMockSubject
     |           |-- _MockSubject
     |           |-- _MockCalledSubject
     |           `-- _MockCalledWithSubject

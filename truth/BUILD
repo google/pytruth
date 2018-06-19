@@ -31,6 +31,7 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":truth",
+        "@absl_py//absl/testing:absltest",
         "@mock_2_0_0//:mock",
         "@six_archive//:six",
     ],

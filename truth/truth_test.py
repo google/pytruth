@@ -25,10 +25,10 @@ import io
 import os
 import re
 import time
-import unittest
 
 os.environ.setdefault('PBR_VERSION', '1.10.0')
 from mock import mock
+from absl.testing import absltest
 
 import six
 import truth
@@ -107,7 +107,7 @@ class DeclassifiedDictTestClass(dict, DeclassifiedTestClass):
   """Test class that simulates a dictionary object object without a class."""
 
 
-class BaseTest(unittest.TestCase):
+class BaseTest(absltest.TestCase):
   """Helper class that makes testing failures easier.
 
   Instead of
@@ -132,8 +132,8 @@ class BaseTest(unittest.TestCase):
 
   # pylint: disable=invalid-name
   AssertRaisesRegex = getattr(
-      unittest.TestCase, 'assertRaisesRegex',
-      unittest.TestCase.assertRaisesRegexp)
+      absltest.TestCase, 'assertRaisesRegex',
+      absltest.TestCase.assertRaisesRegexp)
   # pylint: enable=invalid-name
 
 
@@ -260,7 +260,7 @@ class AssertThatTest(BaseTest):
     subject._Resolve()
 
 
-class IsComparableTest(unittest.TestCase):
+class IsComparableTest(absltest.TestCase):
 
   def testIsComparable(self):
     self.assertTrue(truth._IsComparable(()))
@@ -289,7 +289,7 @@ class IsComparableTest(unittest.TestCase):
     self.assertTrue(truth._IsComparable(mock_time))
 
 
-class IsHashableTest(unittest.TestCase):
+class IsHashableTest(absltest.TestCase):
 
   def testIsHashable(self):
     self.assertTrue(truth._IsHashable(()))
@@ -326,7 +326,7 @@ class IsHashableTest(unittest.TestCase):
     self.assertTrue(truth._IsHashable(mock_time))
 
 
-class IsIterableTest(unittest.TestCase):
+class IsIterableTest(absltest.TestCase):
 
   def testIsIterable(self):
     self.assertTrue(truth._IsIterable(()))
@@ -355,7 +355,7 @@ class IsIterableTest(unittest.TestCase):
     self.assertTrue(truth._IsIterable(mock_time))
 
 
-class IsMockTest(unittest.TestCase):
+class IsMockTest(absltest.TestCase):
 
   @mock.patch.object(os.path, 'isdir')
   @mock.patch.object(time, 'sleep', autospec=True)
@@ -374,7 +374,7 @@ class IsMockTest(unittest.TestCase):
     self.assertFalse(truth._IsMock(DeclassifiedTestClass()))
 
 
-class IsNumericTest(unittest.TestCase):
+class IsNumericTest(absltest.TestCase):
 
   def testIsNumeric(self):
     self.assertTrue(truth._IsNumeric(1))
@@ -406,7 +406,7 @@ class IsNumericTest(unittest.TestCase):
     self.assertFalse(truth._IsNumeric(mock_time))
 
 
-class DescribeTimesTest(unittest.TestCase):
+class DescribeTimesTest(absltest.TestCase):
 
   def testOnce(self):
     self.assertEqual(truth._DescribeTimes(1), 'once')
@@ -420,7 +420,7 @@ class DescribeTimesTest(unittest.TestCase):
     self.assertEqual(truth._DescribeTimes(29.35), '29.35 times')
 
 
-class AllowUnresolvedSubjects(unittest.TestCase):
+class AllowUnresolvedSubjects(absltest.TestCase):
   """Children of this test class may create unresolved subjects.
 
   Any unresolved subjects are forcibly resolved at the end of each test case.
@@ -914,7 +914,7 @@ class ComparableSubjectTest(BaseTest):
       s.IsLessThan(None)
 
 
-class DuplicateCounterTest(unittest.TestCase):
+class DuplicateCounterTest(absltest.TestCase):
 
   def testContains(self):
     d = truth._DuplicateCounter()      # {}
@@ -1326,7 +1326,7 @@ class IterableSubjectTest(BaseTest):
     s.IsEqualTo(mock.call(5))
 
 
-class OrderedTest(unittest.TestCase):
+class OrderedTest(absltest.TestCase):
 
   def testInOrderNotImplemented(self):
     ordered = truth._Ordered()
@@ -1334,7 +1334,7 @@ class OrderedTest(unittest.TestCase):
       ordered.InOrder()
 
 
-class InOrderTest(unittest.TestCase):
+class InOrderTest(absltest.TestCase):
 
   def testInOrder(self):
     order = truth._InOrder()
@@ -2167,7 +2167,7 @@ class NoneSubjectTest(BaseTest):
         getattr(self.s, name)(*args)
 
 
-class TypeConstructorTest(unittest.TestCase):
+class TypeConstructorTest(absltest.TestCase):
 
   def testAssertNoKeyIsASubclassOfAnother(self):
     keys = list(truth._TYPE_CONSTRUCTORS.keys())
@@ -2182,4 +2182,4 @@ class TypeConstructorTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-  unittest.main()
+  absltest.main()

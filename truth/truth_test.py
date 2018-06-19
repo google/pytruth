@@ -996,7 +996,7 @@ class DuplicateCounterTest(absltest.TestCase):
     self.assertEqual(len(d), 0)
     self.assertEqual(str(d), '[]')
 
-  def testEquivalentDictionaries(self):
+  def testIncrementEquivalentDictionaries(self):
     d = truth._DuplicateCounter()
     d.Increment({'a': ['b', 'c']})     # These dictionaries are all the same.
     d.Increment({u'a': ['b', 'c']})
@@ -1004,6 +1004,18 @@ class DuplicateCounterTest(absltest.TestCase):
     d.Increment({'a': ['b', u'c']})
     self.assertEqual(len(d), 1)
     self.assertEqual(str(d), "[{'a': ['b', 'c']} [4 copies]]")
+
+  def testDecrementEquivalentDictionaries(self):
+    d = truth._DuplicateCounter()
+    d.Increment({'a': ['b', 'c']})     # These dictionaries are all the same.
+    d.Increment({u'a': ['b', 'c']})
+    self.assertEqual(len(d), 1)
+    d.Decrement({'a': [u'b', 'c']})
+    self.assertEqual(len(d), 1)
+    d.Decrement({'a': ['b', u'c']})
+    self.assertEqual(len(d), 0)
+    d.Decrement({'a': [u'b', u'c']})
+    self.assertEqual(len(d), 0)
 
 
 class IterableSubjectTest(BaseTest):

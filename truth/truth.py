@@ -690,21 +690,29 @@ class _DuplicateCounter(object):
 
   Order is preserved so that error messages containing expected values match.
 
-  This class is threadsafe. It doesn't have to be, but it should be, so it is.
+  Supports counting unhashable objects, including objects that embed unhashable
+  objects. Hashable objects are tracked in O(1) time. Unhashable objects are
+  tracked in O(n) time, where n is the number of unhashable objects being
+  tracked so far.
+
+  This class is threadsafe.
   """
 
   def __init__(self):
     self._d = collections.OrderedDict()
+    self._unhashable_items = []
+    self._unhashable_counts = []
     self._lock = threading.Lock()
 
   def __contains__(self, key):
-    ikey = self.GetKey(key)
     with self._lock:
-      return ikey in self._d
+      if _IsHashable(key):
+        return key in self._d
+      return key in self._unhashable_items
 
   def __len__(self):
     with self._lock:
-      return len(self._d)
+      return len(self._d) or len(self._unhashable_items)
 
   def __str__(self):
     """Returns the string representation of the duplicate counts.
@@ -719,12 +727,17 @@ class _DuplicateCounter(object):
       String, the counts of duplicate items.
     """
     duplicates = []
+    def AppendDuplicateItem(item, count):
+      if count == 1:
+        duplicates.append('{0!r}'.format(item))
+      else:
+        duplicates.append('{0!r} [{1} copies]'.format(item, count))
+
     with self._lock:
       for item, count in six.iteritems(self._d):
-        if count == 1:
-          duplicates.append('{0!r}'.format(item))
-        else:
-          duplicates.append('{0!r} [{1} copies]'.format(item, count))
+        AppendDuplicateItem(item, count)
+      for item, count in zip(self._unhashable_items, self._unhashable_counts):
+        AppendDuplicateItem(item, count)
     return '[{0}]'.format(', '.join(duplicates))
 
   def Increment(self, key):
@@ -733,12 +746,19 @@ class _DuplicateCounter(object):
     Args:
       key: the key being counted.
     """
-    ikey = self.GetKey(key)
     with self._lock:
-      if ikey in self._d:
-        self._d[ikey] += 1
+      if _IsHashable(key):
+        if key in self._d:
+          self._d[key] += 1
+        else:
+          self._d[key] = 1
       else:
-        self._d[ikey] = 1
+        try:
+          i = self._unhashable_items.index(key)
+          self._unhashable_counts[i] += 1
+        except ValueError:
+          self._unhashable_items.append(key)
+          self._unhashable_counts.append(1)
 
   def Decrement(self, key):
     """Atomically decrement a count by 1. Expunge the item if the count is 0.
@@ -748,29 +768,23 @@ class _DuplicateCounter(object):
     Args:
       key: the key being counted.
     """
-    ikey = self.GetKey(key)
     with self._lock:
-      if ikey in self._d:
-        if self._d[ikey] > 1:
-          self._d[ikey] -= 1
-        else:
-          del self._d[ikey]
-
-  @classmethod
-  def GetKey(cls, key):
-    """Generates a hashable dictionary key for any object.
-
-    Args:
-      key: the key being counted.
-
-    Returns:
-      key itself if key is hashable, otherwise str(key).
-    """
-    try:
-      hash(key)
-      return key
-    except TypeError:
-      return str(key)
+      if _IsHashable(key):
+        if key in self._d:
+          if self._d[key] > 1:
+            self._d[key] -= 1
+          else:
+            del self._d[key]
+      else:
+        try:
+          i = self._unhashable_items.index(key)
+          if self._unhashable_counts[i] > 1:
+            self._unhashable_counts[i] -= 1
+          else:
+            del self._unhashable_counts[i]
+            del self._unhashable_items[i]
+        except ValueError:
+          pass
 
 
 class _IterableSubject(_DefaultSubject):

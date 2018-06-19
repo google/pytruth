@@ -989,12 +989,21 @@ class DuplicateCounterTest(unittest.TestCase):
     d.Increment(['a'])                 # {['a']: 1}
     self.assertIn(['a'], d)
     self.assertEqual(len(d), 1)
-    self.assertEqual(str(d), '["[\'a\']"]')
+    self.assertEqual(str(d), "[['a']]")
 
     d.Decrement(['a'])                 # {}
     self.assertNotIn([], d)
     self.assertEqual(len(d), 0)
     self.assertEqual(str(d), '[]')
+
+  def testEquivalentDictionaries(self):
+    d = truth._DuplicateCounter()
+    d.Increment({'a': ['b', 'c']})     # These dictionaries are all the same.
+    d.Increment({u'a': ['b', 'c']})
+    d.Increment({'a': [u'b', 'c']})
+    d.Increment({'a': ['b', u'c']})
+    self.assertEqual(len(d), 1)
+    self.assertEqual(str(d), "[{'a': ['b', 'c']} [4 copies]]")
 
 
 class IterableSubjectTest(BaseTest):
@@ -1092,7 +1101,7 @@ class IterableSubjectTest(BaseTest):
     self.assertIsInstance(s.ContainsAllOf(5, 3, 8, []), truth._NotInOrder)
     with self.Failure('contains all of', 'missing <[9]>'):
       s.ContainsAllOf(3, [], 8, 5, 9)
-    with self.Failure('contains all of', "missing <['{}']>"):
+    with self.Failure('contains all of', 'missing <[{}]>'):
       s.ContainsAllOf(3, [], 8, 5, {})
     with self.Failure('contains all of', 'missing <[9]>'):
       s.ContainsAllOf(8, 3, [], 9, 5)
@@ -1123,21 +1132,21 @@ class IterableSubjectTest(BaseTest):
       s.ContainsExactly(3, 5, [], 9)
     with self.Failure('contains exactly', 'is missing <[9, 10]>'):
       s.ContainsExactly(9, 3, 5, [], 10)
-    with self.Failure('contains exactly', "has unexpected items <['[]']>"):
+    with self.Failure('contains exactly', 'has unexpected items <[[]]>'):
       s.ContainsExactly(3, 5)
     with self.Failure('contains exactly', 'has unexpected items <[5]>'):
       s.ContainsExactly([], 3)
-    with self.Failure('contains exactly', "has unexpected items <[5, '[]']>"):
+    with self.Failure('contains exactly', 'has unexpected items <[5, []]>'):
       s.ContainsExactly(3)
     with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
       s.ContainsExactly(4, 4)
     with self.Failure(
         'contains exactly',
-        'is missing <[9]>', "has unexpected items <['[]']>"):
+        'is missing <[9]>', 'has unexpected items <[[]]>'):
       s.ContainsExactly(3, 5, 9)
     with self.Failure(
         'contains exactly',
-        "is missing <['(3, 5, [])']>",
+        'is missing <[(3, 5, [])]>',
         'often not the correct thing to do'):
       s.ContainsExactly((3, 5, []))
     with self.Failure('is empty'):
@@ -1159,17 +1168,17 @@ class IterableSubjectTest(BaseTest):
       s.ContainsExactlyElementsIn((3, 5, [], 9))
     with self.Failure('contains exactly', 'is missing <[9, 10]>'):
       s.ContainsExactlyElementsIn((9, 3, 5, [], 10))
-    with self.Failure('contains exactly', "has unexpected items <['[]']>"):
+    with self.Failure('contains exactly', 'has unexpected items <[[]]>'):
       s.ContainsExactlyElementsIn((3, 5))
     with self.Failure('contains exactly', 'has unexpected items <[5]>'):
       s.ContainsExactlyElementsIn(([], 3))
-    with self.Failure('contains exactly', "has unexpected items <[5, '[]']>"):
+    with self.Failure('contains exactly', 'has unexpected items <[5, []]>'):
       s.ContainsExactlyElementsIn((3,))
     with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
       s.ContainsExactlyElementsIn((4, 4))
     with self.Failure(
         'contains exactly',
-        'is missing <[9]>', "has unexpected items <['[]']>"):
+        'is missing <[9]>', 'has unexpected items <[[]]>'):
       s.ContainsExactlyElementsIn((3, 5, 9))
     with self.Failure('is empty'):
       s.ContainsExactlyElementsIn(())
@@ -1183,17 +1192,17 @@ class IterableSubjectTest(BaseTest):
       s.IsEqualTo((3, 5, [], 9))
     with self.Failure('contains exactly', 'is missing <[9, 10]>'):
       s.IsEqualTo((9, 3, 5, [], 10))
-    with self.Failure('contains exactly', "has unexpected items <['[]']>"):
+    with self.Failure('contains exactly', 'has unexpected items <[[]]>'):
       s.IsEqualTo((3, 5))
     with self.Failure('contains exactly', 'has unexpected items <[5]>'):
       s.IsEqualTo(([], 3))
-    with self.Failure('contains exactly', "has unexpected items <[5, '[]']>"):
+    with self.Failure('contains exactly', 'has unexpected items <[5, []]>'):
       s.IsEqualTo((3,))
     with self.Failure('contains exactly', 'is missing <[4 [2 copies]]>'):
       s.IsEqualTo((4, 4))
     with self.Failure(
         'contains exactly',
-        'is missing <[9]>', "has unexpected items <['[]']>"):
+        'is missing <[9]>', 'has unexpected items <[[]]>'):
       s.IsEqualTo((3, 5, 9))
     with self.Failure('is empty'):
       s.IsEqualTo(())
@@ -1886,13 +1895,13 @@ class MockSubjectTest(BaseTest):
     self.assertIsInstance(
         s.HasExactlyCalls([mock.call(10), mock.call(5)]), truth._NotInOrder)
 
-    with self.Failure("unexpected items <['call(10)']>"):
+    with self.Failure('unexpected items <[call(10)]>'):
       s.HasExactlyCalls(mock.call(5))
-    with self.Failure("missing <['call(7)']>"):
+    with self.Failure('missing <[call(7)]>'):
       s.HasExactlyCalls(mock.call(5), mock.call(7), mock.call(10))
-    with self.Failure("unexpected items <['call(10)']>"):
+    with self.Failure('unexpected items <[call(10)]>'):
       s.HasExactlyCalls([mock.call(5)])
-    with self.Failure("missing <['call(7)']>"):
+    with self.Failure('missing <[call(7)]>'):
       s.HasExactlyCalls([mock.call(5), mock.call(7), mock.call(10)])
 
 

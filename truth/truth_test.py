@@ -929,6 +929,14 @@ class DuplicateCounterTest(absltest.TestCase):
     self.assertNotIn('a', d)
     self.assertNotIn('b', d)
 
+  def testLen(self):
+    d = truth._DuplicateCounter()
+    self.assertEqual(len(d), 0)
+    d.Increment('a')
+    self.assertEqual(len(d), 1)
+    d.Increment(['a'])
+    self.assertEqual(len(d), 2)
+
   def testEverything(self):
     # It's much easier to test Increment() and Decrement()'s effects on
     # len() and str() using an integration test like this.

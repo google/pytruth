@@ -712,7 +712,7 @@ class _DuplicateCounter(object):
 
   def __len__(self):
     with self._lock:
-      return len(self._d) or len(self._unhashable_items)
+      return len(self._d) + len(self._unhashable_items)
 
   def __str__(self):
     """Returns the string representation of the duplicate counts.

@@ -207,6 +207,8 @@ def AssertThat(target):
     if issubclass(type(target), super_type):
       return subject_class(target)
 
+  if _IsMock(target):
+    return _MockSubject(target)
   if _IsNumeric(target):
     return _NumericSubject(target)
   if _IsComparable(target) and _IsIterable(target):
@@ -215,8 +217,6 @@ def AssertThat(target):
     return _ComparableSubject(target)
   if _IsIterable(target):
     return _IterableSubject(target)
-  if _IsMock(target):
-    return _MockSubject(target)
 
   return _DefaultSubject(target)
 

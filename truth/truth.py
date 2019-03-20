@@ -869,7 +869,9 @@ class _IterableSubject(_DefaultSubject):
     return self._ContainsAny('contains any of', expected)
 
   def ContainsExactly(self, *expected):
-    expecting_single_iterable = len(expected) == 1 and _IsIterable(expected)
+    expecting_single_iterable = (
+        len(expected) == 1 and _IsIterable(expected)
+        and not isinstance(expected[0], six.string_types))
     return self._ContainsExactlyElementsIn(
         expected, warn_elements_in=expecting_single_iterable)
 

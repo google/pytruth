@@ -1172,6 +1172,13 @@ class IterableSubjectTest(BaseTest):
     with self.Failure('is empty'):
       s.ContainsExactly()
 
+  def testContainsExactlyDoesNotWarnIfSingleStringNotContained(self):
+    s = truth._IterableSubject(())
+    try:
+      s.ContainsExactly('abc')
+    except truth.TruthAssertionError as e:
+      self.assertNotIn('often not the correct thing to do', e.args[0])
+
   def testContainsExactlyEmptyContainer(self):
     s = truth._IterableSubject(())
     s.ContainsExactly()

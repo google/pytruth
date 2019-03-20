@@ -14,91 +14,103 @@
 
 workspace(name = "pytruth")
 
-new_http_archive(
-    name = "appdirs_1_4_0",
-    build_file = "third_party/appdirs/BUILD",
-    sha256 = "8fc245efb4387a4e3e0ac8ebcc704582df7d72ff6a42a53f5600bbb18fdaadc5",
-    strip_prefix = "appdirs-1.4.0",
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "appdirs_1_4_3",
+    build_file = "//third_party/appdirs:BUILD",
+    sha256 = "9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92",
+    strip_prefix = "appdirs-1.4.3",
     urls = [
-        "https://pypi.python.org/packages/bd/66/0a7f48a0f3fb1d3a4072bceb5bbd78b1a6de4d801fb7135578e7c7b1f563/appdirs-1.4.0.tar.gz",
+        "https://files.pythonhosted.org/packages/48/69/d87c60746b393309ca30761f8e2b49473d43450b150cb08f3c6df5c11be5/appdirs-1.4.3.tar.gz",
     ],
 )
 
-new_http_archive(
+http_archive(
     name = "funcsigs_1_0_2",
-    build_file = "third_party/funcsigs/BUILD",
+    build_file = "//third_party/funcsigs:BUILD",
     sha256 = "a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50",
     strip_prefix = "funcsigs-1.0.2",
     urls = [
-        "https://pypi.python.org/packages/94/4a/db842e7a0545de1cdb0439bb80e6e42dfe82aaeaadd4072f2263a4fbed23/funcsigs-1.0.2.tar.gz",
+        "https://files.pythonhosted.org/packages/94/4a/db842e7a0545de1cdb0439bb80e6e42dfe82aaeaadd4072f2263a4fbed23/funcsigs-1.0.2.tar.gz",
     ],
 )
 
 http_archive(
     name = "absl_py",
     urls = [
-        "https://github.com/abseil/abseil-py/archive/521823174db442f6d5c6f3386b538feec58f6656.tar.gz",
+        "https://github.com/abseil/abseil-py/archive/pypi-v0.7.1.tar.gz",
     ],
-    sha256 = "6179f3a7c7ae54cba837cbfabe07bd87932afdb9d6e78ed5c01b087f95cd7e20",
-    strip_prefix = "abseil-py-521823174db442f6d5c6f3386b538feec58f6656",
+    sha256 = "3d0f39e0920379ff1393de04b573bca3484d82a5f8b939e9e83b20b6106c9bbe",
+    strip_prefix = "abseil-py-pypi-v0.7.1",
 )
 
-new_http_archive(
+http_archive(
+    name = "enum34_archive",
+    build_file = "//third_party/enum34:BUILD",
+    sha256 = "8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1",
+    strip_prefix = "enum34-1.1.6",
+    urls = [
+        "https://files.pythonhosted.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz",
+    ],
+)
+
+http_archive(
     name = "mock_2_0_0",
-    build_file = "third_party/mock/BUILD",
+    build_file = "//third_party/mock:BUILD",
     sha256 = "b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba",
     strip_prefix = "mock-2.0.0",
     urls = [
-        "https://pypi.python.org/packages/0c/53/014354fc93c591ccc4abff12c473ad565a2eb24dcd82490fae33dbf2539f/mock-2.0.0.tar.gz",
+        "https://files.pythonhosted.org/packages/0c/53/014354fc93c591ccc4abff12c473ad565a2eb24dcd82490fae33dbf2539f/mock-2.0.0.tar.gz",
     ],
 )
 
-new_http_archive(
-    name = "packaging_16_8",
-    build_file = "third_party/packaging/BUILD",
-    sha256 = "5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e",
-    strip_prefix = "packaging-16.8",
+http_archive(
+    name = "packaging_19_0",
+    build_file = "//third_party/packaging:BUILD",
+    sha256 = "0c98a5d0be38ed775798ece1b9727178c4469d9c3b4ada66e8e6b7849f8732af",
+    strip_prefix = "packaging-19.0",
     urls = [
-        "https://pypi.python.org/packages/c6/70/bb32913de251017e266c5114d0a645f262fb10ebc9bf6de894966d124e35/packaging-16.8.tar.gz",
+        "https://files.pythonhosted.org/packages/16/51/d72654dbbaa4a4ffbf7cb0ecd7d12222979e0a660bf3f42acc47550bf098/packaging-19.0.tar.gz",
     ],
 )
 
-new_http_archive(
-    name = "pbr_1_10_0",
-    build_file = "third_party/pbr/BUILD",
-    sha256 = "186428c270309e6fdfe2d5ab0949ab21ae5f7dea831eab96701b86bd666af39c",
-    strip_prefix = "pbr-1.10.0",
+http_archive(
+    name = "pbr_5_1_3",
+    build_file = "//third_party/pbr:BUILD",
+    sha256 = "8c361cc353d988e4f5b998555c88098b9d5964c2e11acf7b0d21925a66bb5824",
+    strip_prefix = "pbr-5.1.3",
     urls = [
-        "https://pypi.python.org/packages/c3/2c/63275fab26a0fd8cadafca71a3623e4d0f0ee8ed7124a5bb128853d178a7/pbr-1.10.0.tar.gz",
+        "https://files.pythonhosted.org/packages/97/76/c151aa4a3054ce63bb6bbd32f3541e4ae068534ed8b74ee2687f6773b013/pbr-5.1.3.tar.gz",
     ],
 )
 
-new_http_archive(
-    name = "pyparsing_2_1_10",
-    build_file = "third_party/pyparsing/BUILD",
-    sha256 = "811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188",
-    strip_prefix = "pyparsing-2.1.10",
+http_archive(
+    name = "pyparsing_2_3_1",
+    build_file = "//third_party/pyparsing:BUILD",
+    sha256 = "66c9268862641abcac4a96ba74506e594c884e3f57690a696d21ad8210ed667a",
+    strip_prefix = "pyparsing-2.3.1",
     urls = [
-        "https://pypi.python.org/packages/38/bb/bf325351dd8ab6eb3c3b7c07c3978f38b2103e2ab48d59726916907cd6fb/pyparsing-2.1.10.tar.gz",
+        "https://files.pythonhosted.org/packages/b9/b8/6b32b3e84014148dcd60dd05795e35c2e7f4b72f918616c61fdce83d27fc/pyparsing-2.3.1.tar.gz",
     ],
 )
 
-new_http_archive(
-    name = "setuptools_34_1_1",
-    build_file = "third_party/setuptools/BUILD",
-    sha256 = "be2108849161624b51b2a5cdba8117e2b3f7a9cf4301cf3839a55afc3a7253e4",
-    strip_prefix = "setuptools-34.1.1",
+http_archive(
+    name = "setuptools_40_8_0",
+    build_file = "//third_party/setuptools:BUILD",
+    sha256 = "6e4eec90337e849ade7103723b9a99631c1f0d19990d6e8412dc42f5ae8b304d",
+    strip_prefix = "setuptools-40.8.0",
     urls = [
-        "https://pypi.python.org/packages/e2/51/3ea582a6d64dcd36858a10de31d43ca8ea0a3be5386dd0caf6503167cdfb/setuptools-34.1.1.zip",
+        "https://files.pythonhosted.org/packages/c2/f7/c7b501b783e5a74cf1768bc174ee4fb0a8a6ee5af6afa92274ff964703e0/setuptools-40.8.0.zip",
     ],
 )
 
-new_http_archive(
+http_archive(
     name = "six_archive",
-    build_file = "third_party/six/BUILD",
-    sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a",
-    strip_prefix = "six-1.10.0",
+    build_file = "//third_party/six:BUILD",
+    sha256 = "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73",
+    strip_prefix = "six-1.12.0",
     urls = [
-        "https://pypi.python.org/packages/b3/b2/238e2590826bfdd113244a40d9d3eb26918bd798fc187e2360a8367068db/six-1.10.0.tar.gz",
+        "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz",
     ],
 )

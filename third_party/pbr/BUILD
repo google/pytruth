@@ -23,7 +23,7 @@ py_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        "@packaging_16_8//:packaging",
-        "@setuptools_34_1_1//:setuptools",
+        "@packaging_19_0//:packaging",
+        "@setuptools_40_8_0//:setuptools",
     ],
 )

@@ -18,11 +18,11 @@ exports_files(["LICENSE"])
 
 py_library(
     name = "mock",
-    srcs = ["mock/mock.py"],
+    srcs = glob(["mock/mock.py"]),
     visibility = ["//visibility:public"],
     deps = [
         "@funcsigs_1_0_2//:funcsigs",
-        "@pbr_1_10_0//:pbr",
+        "@pbr_5_1_3//:pbr",
         "@six_archive//:six",
     ],
 )

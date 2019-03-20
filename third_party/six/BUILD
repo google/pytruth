@@ -18,6 +18,6 @@ exports_files(["LICENSE"])
 
 py_library(
     name = "six",
-    srcs = ["six.py"],
+    srcs = glob(["six.py"]),
     visibility = ["//visibility:public"],
 )

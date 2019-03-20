@@ -123,6 +123,7 @@ from __future__ import print_function
 import atexit
 import collections
 import contextlib
+import difflib
 import imp
 import inspect
 import math
@@ -1346,6 +1347,19 @@ class _TolerantNumericSubject(_EmptySubject):
 class _StringSubject(_ComparableIterableSubject):
   """Subject for all types of strings--basic and Unicode."""
 
+  def IsEqualTo(self, expected):
+    # Use unified diff strategy when comparing multiline strings.
+    if (isinstance(expected, six.string_types)
+        and '\n' in self._actual and '\n' in expected):
+      if self._actual != expected:
+        pretty_diff_list = difflib.ndiff(
+            self._actual.splitlines(True), expected.splitlines(True))
+        pretty_diff = '\n'.join(repr(s)[1:-1] for s in pretty_diff_list)
+        self._Fail('Not true that actual is equal to expected, found diff:\n{0}'
+                   .format(pretty_diff))
+    else:
+      super(_StringSubject, self).IsEqualTo(expected)
+
   def HasLength(self, expected):
     actual_length = len(self._actual)
     if actual_length != expected:
@@ -1486,7 +1500,7 @@ class _MockSubject(_NamedMockSubject):
     if (len(calls) == 1 and _IsIterable(calls[0])
         # pylint: disable=protected-access
         and not isinstance(calls[0], mock._Call)):
-        # pylint: enable=protected-access
+      # pylint: enable=protected-access
       calls = calls[0]
 
     contains_all = AssertThat(self._actual.mock_calls).ContainsAllIn(calls)
@@ -1516,7 +1530,7 @@ class _MockSubject(_NamedMockSubject):
     if (len(calls) == 1 and _IsIterable(calls[0])
         # pylint: disable=protected-access
         and not isinstance(calls[0], mock._Call)):
-        # pylint: enable=protected-access
+      # pylint: enable=protected-access
       calls = calls[0]
 
     return AssertThat(self._actual.mock_calls).ContainsExactlyElementsIn(calls)

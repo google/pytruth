@@ -26,7 +26,7 @@ import os
 import re
 import time
 
-os.environ.setdefault('PBR_VERSION', '1.10.0')
+os.environ.setdefault('PBR_VERSION', '5.1.3')
 from mock import mock
 from absl.testing import absltest
 
@@ -1695,6 +1695,15 @@ class TolerantNumericSubjectToleranceTest(BaseTest, AllowUnresolvedSubjects):
 
 
 class StringSubjectTest(BaseTest):
+
+  def testIsEqualToVerifiesEquality(self):
+    s = truth._StringSubject('line1\nline2\n')
+    s.IsEqualTo('line1\nline2\n')
+
+  def testIsEqualToRaisesErrorWithVerboseDiff(self):
+    s = truth._StringSubject('line1\nline2\nline3\nline4\nline5\n')
+    with self.Failure('\n- line3\\n\n', '\n  line4\\n\n', '\n+ line6\\n\n'):
+      s.IsEqualTo('line1\nline2\nline4\nline6\n')
 
   def testHasLength(self):
     s = truth._StringSubject('abc')

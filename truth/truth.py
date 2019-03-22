@@ -388,8 +388,8 @@ class _EmptySubject(object):
       return '{0}(<{1!r}>)'.format(self._name, self.__actual)
     return '<{0!r}>'.format(self.__actual)
 
-  def _FailComparingValues(self, verb, other):
-    self._FailWithProposition('{0} <{1!r}>'.format(verb, other))
+  def _FailComparingValues(self, verb, other, suffix=''):
+    self._FailWithProposition('{0} <{1!r}>'.format(verb, other), suffix=suffix)
 
   def _FailWithBadResults(self, verb, other, fail_verb, actual, suffix=''):
     self._FailWithProposition(
@@ -424,7 +424,12 @@ class _DefaultSubject(_EmptySubject):
 
   def IsEqualTo(self, other):
     if self._actual != other:
-      self._FailComparingValues('is equal to', other)
+      suffix = ''
+      if str(self._actual) == str(other):
+        suffix = ' However, their str() representations are equal.'
+      elif repr(self._actual) == repr(other):
+        suffix = ' However, their repr() representations are equal.'
+      self._FailComparingValues('is equal to', other, suffix=suffix)
 
   def IsNotEqualTo(self, other):
     if self._actual == other:

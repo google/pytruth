@@ -499,6 +499,24 @@ class DefaultSubjectTest(BaseTest):
     with self.Failure('is equal to <3>'):
       s.IsEqualTo(3)
 
+  def testIsEqualToFailsButFormattedRepresentationsAreEqual(self):
+    class StrReprTestClass(object):
+      def __init__(self, str_value, repr_value):
+        self.str = str_value
+        self.repr = repr_value
+
+      def __str__(self):
+        return self.str
+
+      def __repr__(self):
+        return self.repr
+
+    s = truth._DefaultSubject(StrReprTestClass('s1', 'r1'))
+    with self.Failure('their str() representations are equal'):
+      s.IsEqualTo(StrReprTestClass('s1', 'r2'))
+    with self.Failure('their repr() representations are equal'):
+      s.IsEqualTo(StrReprTestClass('s2', 'r1'))
+
   def testIsNotEqualTo(self):
     s = truth._DefaultSubject(5)
     s.IsNotEqualTo(3)

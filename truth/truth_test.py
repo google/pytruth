@@ -428,6 +428,7 @@ class AllowUnresolvedSubjects(absltest.TestCase):
   """
 
   def tearDown(self):
+    super(AllowUnresolvedSubjects, self).tearDown()
     truth._EmptySubject._ResolveAll()
 
 
@@ -501,6 +502,7 @@ class DefaultSubjectTest(BaseTest):
 
   def testIsEqualToFailsButFormattedRepresentationsAreEqual(self):
     class StrReprTestClass(object):
+
       def __init__(self, str_value, repr_value):
         self.str = str_value
         self.repr = repr_value
@@ -949,63 +951,63 @@ class DuplicateCounterTest(absltest.TestCase):
 
   def testLen(self):
     d = truth._DuplicateCounter()
-    self.assertEqual(len(d), 0)
+    self.assertEmpty(d)
     d.Increment('a')
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     d.Increment(['a'])
-    self.assertEqual(len(d), 2)
+    self.assertLen(d, 2)
 
   def testEverything(self):
     # It's much easier to test Increment() and Decrement()'s effects on
     # len() and str() using an integration test like this.
     d = truth._DuplicateCounter()      # {}
     self.assertFalse(d)
-    self.assertEqual(len(d), 0)
+    self.assertEmpty(d)
     self.assertEqual(str(d), '[]')
 
     d.Increment('a')                   # {'a': 1}
     self.assertTrue(d)
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     self.assertEqual(str(d), "['a']")
 
     d.Increment('a')                   # {'a': 2}
     self.assertTrue(d)
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     self.assertEqual(str(d), "['a' [2 copies]]")
 
     d.Increment('b')                   # {'a': 2, 'b': 1}
     self.assertTrue(d)
-    self.assertEqual(len(d), 2)
+    self.assertLen(d, 2)
     self.assertEqual(str(d), "['a' [2 copies], 'b']")
 
     d.Decrement('a')                   # {'a': 1, 'b': 1}
     self.assertTrue(d)
-    self.assertEqual(len(d), 2)
+    self.assertLen(d, 2)
     self.assertEqual(str(d), "['a', 'b']")
 
     d.Decrement('a')                   # {'b': 1}
     self.assertTrue(d)
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     self.assertEqual(str(d), "['b']")
 
     d.Increment('a')                   # {'b': 1, 'a': 1}
     self.assertTrue(d)
-    self.assertEqual(len(d), 2)
+    self.assertLen(d, 2)
     self.assertEqual(str(d), "['b', 'a']")
 
     d.Decrement('a')                   # {'b': 1}
     self.assertTrue(d)
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     self.assertEqual(str(d), "['b']")
 
     d.Decrement('b')                   # {}
     self.assertFalse(d)
-    self.assertEqual(len(d), 0)
+    self.assertEmpty(d)
     self.assertEqual(str(d), '[]')
 
     d.Decrement('a')                   # {}
     self.assertFalse(d)
-    self.assertEqual(len(d), 0)
+    self.assertEmpty(d)
     self.assertEqual(str(d), '[]')
 
   def testUnhashableKeys(self):
@@ -1014,12 +1016,12 @@ class DuplicateCounterTest(absltest.TestCase):
 
     d.Increment(['a'])                 # {['a']: 1}
     self.assertIn(['a'], d)
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     self.assertEqual(str(d), "[['a']]")
 
     d.Decrement(['a'])                 # {}
     self.assertNotIn([], d)
-    self.assertEqual(len(d), 0)
+    self.assertEmpty(d)
     self.assertEqual(str(d), '[]')
 
   def testIncrementEquivalentDictionaries(self):
@@ -1028,20 +1030,20 @@ class DuplicateCounterTest(absltest.TestCase):
     d.Increment({u'a': ['b', 'c']})
     d.Increment({'a': [u'b', 'c']})
     d.Increment({'a': ['b', u'c']})
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     self.assertEqual(str(d), "[{'a': ['b', 'c']} [4 copies]]")
 
   def testDecrementEquivalentDictionaries(self):
     d = truth._DuplicateCounter()
     d.Increment({'a': ['b', 'c']})     # These dictionaries are all the same.
     d.Increment({u'a': ['b', 'c']})
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     d.Decrement({'a': [u'b', 'c']})
-    self.assertEqual(len(d), 1)
+    self.assertLen(d, 1)
     d.Decrement({'a': ['b', u'c']})
-    self.assertEqual(len(d), 0)
+    self.assertEmpty(d)
     d.Decrement({'a': [u'b', u'c']})
-    self.assertEqual(len(d), 0)
+    self.assertEmpty(d)
 
 
 class IterableSubjectTest(BaseTest):

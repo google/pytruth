@@ -83,6 +83,8 @@ AssertThat(equal_eo).IsEmpty()
 AssertThat(equal_ep).IsEmpty()
 AssertThat(equal_eq).IsEmpty()
 AssertThat(equal_er).IsEmpty()
+AssertThat(equal_es).IsEmpty()
+AssertThat(equal_et).IsEmpty()
 
 AssertThat(equal_l0).ContainsExactly(equal_b0, equal_c0).InOrder()
 AssertThat(equal_l1).ContainsExactly(equal_b1, equal_c1).InOrder()
@@ -96,6 +98,14 @@ AssertThat(equal_l8).ContainsExactlyElementsIn(equal_b8 for equal_c8 in equal_d8
 AssertThat(equal_l9).ContainsExactlyElementsIn(equal_b9 for equal_c9 in equal_d9).InOrder()
 AssertThat(equal_la).ContainsExactlyElementsIn(equal_ba for equal_ca in equal_da)
 AssertThat(equal_lb).ContainsExactly(equal_bb)
+
+AssertThat(equal_len_a0).HasSize(equal_len_b0)
+AssertThat(equal_len_a1).HasSize(103)
+AssertThat(equal_len_a2).IsEmpty()
+
+AssertThat(empty_container_a0).IsEmpty()
+
+AssertThat(not_empty_container_a0).IsNotEmpty()
 
 AssertThat(dict_subset_a0.items()).ContainsAllIn(dict_subset_b0.items())
 
@@ -214,6 +224,8 @@ AssertThat(not_equal_eo).IsNotEmpty()
 AssertThat(not_equal_ep).IsNotEmpty()
 AssertThat(not_equal_eq).IsNotEmpty()
 AssertThat(not_equal_er).IsNotEmpty()
+AssertThat(not_equal_es).IsNotEmpty()
+AssertThat(not_equal_et).IsNotEmpty()
 
 AssertThat(underscore).IsTrue()
 

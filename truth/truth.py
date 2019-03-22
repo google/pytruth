@@ -448,6 +448,7 @@ class _DefaultSubject(_EmptySubject):
       self._FailComparingValues('is equal to any of', iterable)
 
   def IsNotIn(self, iterable):
+    """Asserts that this subject is not a member of the given iterable."""
     if hasattr(iterable, 'index'):
       try:
         index = iterable.index(self._actual)
@@ -849,6 +850,7 @@ class _IterableSubject(_DefaultSubject):
           'should not have contained <{0!r}>'.format(element))
 
   def ContainsNoDuplicates(self):
+    """Asserts that this subject contains no two elements that are the same."""
     # Dictionaries and Sets have unique members by definition; avoid iterating.
     if isinstance(self._actual, (collections.Mapping, collections.Set)):
       return
@@ -1144,6 +1146,15 @@ class _IterableSubject(_DefaultSubject):
       self._FailWithBadResults(fail_verb, excluded, 'contains', present)
 
   def _PairwiseCheck(self, pair_comparator, strict=False):
+    """Iterates over this subject and compares adjacent elements.
+
+    For example, compares element 0 with element 1, 1 with 2, ... n-1 with n.
+
+    Args:
+      pair_comparator: A function accepting two arguments. If the arguments are
+          ordered as expected, the function should return True, otherwise False.
+      strict: whether the pair comparator function is strict.
+    """
     i = iter(self._actual)
     try:
       prev = next(i)

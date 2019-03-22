@@ -40,6 +40,7 @@ PyTruth is not an actively maintained project. No support is provided.
 It is shared with the community to bring an expressive, consistent assertion
 style to projects that may be using a combination of
 [unittest](https://docs.python.org/3/library/unittest.html),
+[abseil](https://github.com/abseil/abseil-py),
 [googletest](https://github.com/google/googletest),
 [mox](https://pypi.python.org/pypi/mox), and
 [mock](https://docs.python.org/3/library/unittest.mock.html)&mdash;especially
@@ -214,6 +215,12 @@ N/A                             | `AssertThat(a).IsOrdered()`
 N/A                             | `AssertThat(a).IsOrderedAccordingTo(cf)`
 N/A                             | `AssertThat(a).IsStrictlyOrdered()`
 N/A                             | `AssertThat(a).IsStrictlyOrderedAccordingTo(cf)`
+
+absltest                        | PyTruth
+--------------------------------|---------------------------------------------
+`assertLen(a, n)`               | `AssertThat(a).HasSize(n)`
+`assertEmpty(a)`                | `AssertThat(a).IsEmpty()`
+`assertNotEmpty(a)`             | `AssertThat(a).IsNotEmpty()`
 
 #### Defining order
 

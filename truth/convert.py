@@ -63,6 +63,9 @@ class Converter(object):
       'Equals': '({0}).IsEqualTo({1})',
       'NotEqual': '({0}).IsNotEqualTo({1})',
       'NotEquals': '({0}).IsNotEqualTo({1})',
+      'Empty': '({0}).IsEmpty()',
+      'NotEmpty': '({0}).IsNotEmpty()',
+      'Len': '({0}).HasSize({1})',
       'DictContainsSubset': '({0}.items()).ContainsAllIn({1}.items())',
       'DictEqual': '({0}).ContainsExactlyItemsIn({1})',
       'ListEqual': '({0}).ContainsExactlyElementsIn({1}).InOrder()',
@@ -118,7 +121,7 @@ class Converter(object):
 
   EMPTY_CONTAINERS = frozenset((
       "''", '""', "r''", 'r""', "u''", 'u""',
-      '()', '[]', '{}', 'dict()', 'list()', 'set()', 'tuple()',
+      '()', '[]', '{}', 'dict()', 'frozenset()', 'list()', 'set()', 'tuple()',
       'collections.OrderedDict()'))
 
   LIST_EQUALITY_ASSERTIONS = frozenset((
@@ -298,7 +301,7 @@ class Converter(object):
              or args[0] in cls.EMPTY_CONTAINERS
              and args[1] not in cls.EMPTY_CONTAINERS
              or cls.LEN_CALL_RE.search(args[1])
-             and cls.NUMERIC_RE.search(args[0])
+             and not cls.LEN_CALL_RE.search(args[0])
              or cls.COMPREHENSION_RE.search(args[0])
              and not cls.COMPREHENSION_RE.search(args[0])
              and not cls.CALL_RE.search(args[0])))
@@ -388,7 +391,7 @@ class Converter(object):
             assertion = '({0}).IsZero()'.format(args[0])
         else:
           match_len = cls.LEN_CALL_RE.search(args[0])
-          if match_len and cls.NUMERIC_RE.search(args[1]):
+          if match_len:
             assertion = '({0}).HasSize({1})'.format(match_len.group(1), args[1])
 
       elif ut_key == 'In':
@@ -400,6 +403,12 @@ class Converter(object):
         if cls.LIST_RE.search(args[1]) or cls.TUPLE_RE.search(args[1]):
           assertion = '({0}).IsNoneOf({1})'.format(
               args[0], args[1][1:-1].strip())
+
+      elif ut_key == 'Len':
+        if args[1] == '0':
+          assertion = '({0}).IsEmpty()'.format(args[0])
+        else:
+          assertion = '({0}).HasSize({1})'.format(args[0], args[1])
 
     return '{0}AssertThat{1}'.format(indentation, assertion)
 

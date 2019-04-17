@@ -31,6 +31,7 @@ from mock import mock
 from absl.testing import absltest
 
 import six
+from six.moves import range
 import truth
 
 
@@ -38,11 +39,13 @@ TYPE_WORD = 'type' if six.PY2 else 'class'
 
 
 def Buffer(s):
+  # pylint: disable=undefined-variable
   return buffer(s) if six.PY2 else memoryview(bytearray(s, 'ascii'))
+  # pylint: enable=undefined-variable
 
 
 def Long(i):
-  return long(i) if six.PY2 else i
+  return long(i) if six.PY2 else i  # pylint: disable=undefined-variable
 
 
 class TestClass(object):
@@ -199,7 +202,8 @@ class AssertThatTest(BaseTest):
     self.AssertSubject(set(), truth._ComparableIterableSubject)
     self.AssertSubject(frozenset(), truth._ComparableIterableSubject)
     self.AssertSubject(bytearray(), truth._ComparableIterableSubject)
-    self.AssertSubject(range(5), truth._ComparableIterableSubject)
+    range5 = list(range(5)) if six.PY2 else range(5)
+    self.AssertSubject(range5, truth._ComparableIterableSubject)
     self.AssertSubject(collections.deque(), truth._ComparableIterableSubject)
 
   def testComparableSubject(self):
@@ -1296,7 +1300,12 @@ class IterableSubjectTest(BaseTest):
     expected = DeclassifiedListTestClass()
     s.IsEqualTo(expected)
     expected.append(3)
-    with self.Failure('is equal to <[3]>'):
+    if six.PY2:
+      expected_failure = 'is equal to <[3]>'
+    else:
+      # Python 3 handles isinstance(DeclassifiedTestClass, C) without raising.
+      expected_failure = 'is missing <[3]>'
+    with self.Failure(expected_failure):
       s.IsEqualTo(expected)
 
   def testContainsExactlyElementsInEmptyContainer(self):

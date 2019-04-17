@@ -29,7 +29,8 @@ from absl.testing import absltest
 import truth
 
 
-AssertThat = truth.AssertThat     # pylint: disable=invalid-name
+
+AssertThat = truth.AssertThat
 
 
 class ConvertTest(absltest.TestCase):
@@ -45,10 +46,12 @@ class ConvertTest(absltest.TestCase):
       return hashlib.sha512(f.read()).hexdigest()
 
   def setUp(self):
+    super(ConvertTest, self).setUp()
     self.temp_file = tempfile.NamedTemporaryFile(
         prefix='truth-', suffix='.py', delete=False)
 
   def tearDown(self):
+    super(ConvertTest, self).tearDown()
     os.unlink(self.temp_file.name)
 
   def _Test(self, name, expected_return_code=0):

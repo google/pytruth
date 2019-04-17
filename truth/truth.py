@@ -134,6 +134,7 @@ import threading
 
 from mock import mock
 import six
+from six.moves import zip
 
 # All these attributes must be present for an object to be deemed comparable.
 _COMPARABLE_ATTRS = frozenset(
@@ -150,9 +151,9 @@ POSITIVE_INFINITY = float('inf')
 NEGATIVE_INFINITY = float('-inf')
 NAN = float('nan')
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,undefined-variable
 Cmp = cmp if six.PY2 else lambda a, b: (a > b) - (a < b)
-# pylint: enable=invalid-name
+# pylint: enable=invalid-name,undefined-variable
 
 
 # Make a copy of all members of <os> and <os.path>, and inject them into the
@@ -1516,7 +1517,7 @@ class _MockSubject(_NamedMockSubject):
     if (len(calls) == 1 and _IsIterable(calls[0])
         # pylint: disable=protected-access
         and not isinstance(calls[0], mock._Call)):
-      # pylint: enable=protected-access
+        # pylint: enable=protected-access
       calls = calls[0]
 
     contains_all = AssertThat(self._actual.mock_calls).ContainsAllIn(calls)
@@ -1546,7 +1547,7 @@ class _MockSubject(_NamedMockSubject):
     if (len(calls) == 1 and _IsIterable(calls[0])
         # pylint: disable=protected-access
         and not isinstance(calls[0], mock._Call)):
-      # pylint: enable=protected-access
+        # pylint: enable=protected-access
       calls = calls[0]
 
     return AssertThat(self._actual.mock_calls).ContainsExactlyElementsIn(calls)

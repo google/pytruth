@@ -26,14 +26,18 @@ import os
 import re
 import time
 
-os.environ.setdefault('PBR_VERSION', '5.1.3')
-from mock import mock
-from absl.testing import absltest
-
 import six
+from absl.testing import absltest
 from six.moves import range
+
 import truth
 
+if six.PY2:
+  from mock import mock
+else:
+  from unittest import mock
+
+os.environ.setdefault('PBR_VERSION', '5.1.3')
 
 TYPE_WORD = 'type' if six.PY2 else 'class'
 

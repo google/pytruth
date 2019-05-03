@@ -20,6 +20,14 @@ Provides unittest assertions in a fluent style.
 Translated from the Java implementation,
 [google/truth](https://github.com/google/truth).
 
+### Installing
+
+pytruth can be installed using [pip](https://pypi.org/project/pip/):
+
+```bash
+pip install pytruth
+```
+
 ## License
 
 PyTruth is licensed under the [Apache 2.0 license](LICENSE).
@@ -54,13 +62,13 @@ User group:
 Import the `truth` module and alias the `AssertThat()` method to begin asserting
 things:
 
-```
+```python
 from truth.truth import AssertThat
 ```
 
 Then, instead of writing
 
-```
+```python
 self.assertEqual(a, b)
 self.assertTrue(c)
 self.assertIn(a, d)
@@ -72,7 +80,7 @@ with self.assertRaises(Error):
 
 one would write
 
-```
+```python
 AssertThat(a).IsEqualTo(b)
 AssertThat(c).IsTrue()
 AssertThat(d).Contains(a)

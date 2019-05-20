@@ -20,14 +20,6 @@ Provides unittest assertions in a fluent style.
 Translated from the Java implementation,
 [google/truth](https://github.com/google/truth).
 
-### Installing
-
-pytruth can be installed using [pip](https://pypi.org/project/pip/):
-
-```bash
-pip install pytruth
-```
-
 ## License
 
 PyTruth is licensed under the [Apache 2.0 license](LICENSE).
@@ -56,6 +48,14 @@ to people familiar with [Java Truth](https://github.com/google/truth).
 
 User group:
 [pytruth-users@googlegroups.com](https://groups.google.com/d/forum/pytruth-users)
+
+### Installing
+
+pytruth can be installed using [pip](https://pypi.org/project/pip/):
+
+```bash
+pip install pytruth
+```
 
 ## Overview
 

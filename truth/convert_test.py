@@ -22,22 +22,25 @@ import hashlib
 import os
 import tempfile
 
-import convert
-os.environ.setdefault('PBR_VERSION', '1.10.0')
-from mock import mock
+import six
 from absl.testing import absltest
+
+import convert
 import truth
 
+if six.PY2:
+  from unittest import mock
+else:
+  from mock import mock
 
+os.environ.setdefault('PBR_VERSION', '1.10.0')
 
 AssertThat = truth.AssertThat
 
 
 class ConvertTest(absltest.TestCase):
-
   INPUT_PY = 'input.py'
-  TRUTH_DIR = os.path.join(
-      os.environ['TEST_SRCDIR'], os.environ['TEST_WORKSPACE'], 'truth')
+  TRUTH_DIR = os.path.dirname(os.path.abspath(__file__))
   TESTDATA = os.path.join(TRUTH_DIR, 'testdata')
 
   @classmethod
@@ -47,7 +50,7 @@ class ConvertTest(absltest.TestCase):
 
   def setUp(self):
     super(ConvertTest, self).setUp()
-    self.temp_file = tempfile.NamedTemporaryFile(
+    self.temp_file = tempfile.NamedTemporaryFile(mode='w',
         prefix='truth-', suffix='.py', delete=False)
 
   def tearDown(self):

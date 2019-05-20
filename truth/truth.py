@@ -132,7 +132,11 @@ import os
 import re
 import threading
 
-from mock import mock
+try:
+  from unittest import mock
+except ImportError:
+  from mock import mock
+
 import six
 from six.moves import zip
 

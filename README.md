@@ -51,7 +51,7 @@ User group:
 
 ### Installing
 
-pytruth can be installed using [pip](https://pypi.org/project/pip/):
+PyTruth can be installed using [pip](https://pypi.org/project/pip/):
 
 ```bash
 pip install pytruth

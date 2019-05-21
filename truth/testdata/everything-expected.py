@@ -318,6 +318,25 @@ with AssertThat(raises_with_regexp_match_a1).IsRaised(matching=raises_with_regex
 with AssertThat(raises_with_regexp_match_a2).IsRaised(matching=raises_with_regexp_match_b2):
   MethodThatRaisesRegexp(raises_with_regexp_match_c2, raises_with_regexp_match_d2)
 
+AssertThat(mock_method).WasCalled()
+AssertThat(mock_method).WasNotCalled()
+AssertThat(mock_method).WasCalled().Once()
+AssertThat(mock_method_a0).WasNotCalled()
+AssertThat(mock_method_b0).WasNotCalled()
+AssertThat(mock_method_a1).WasCalled().Once()
+AssertThat(mock_method_b1).WasCalled().Once()
+AssertThat(mock_method_c0).WasCalled().Times(334)
+AssertThat(mock_method_c1).WasCalled().Times(335)
+AssertThat(mock_method).WasCalled().LastWith(arg_a1, arg_a2, kwarg_a1=val_a1, kwarg_a2=val_a2)
+AssertThat(mock_method).WasCalled().Once().With(arg_b1, arg_b2, kwarg_b1=val_b1, kwarg_b2=val_b2)
+AssertThat(mock_method).WasCalled().With(arg_c1, arg_c2, kwarg_c1=val_c1, kwarg2_c2=val_c2)
+AssertThat(mock_method).HasCalls([call_a1, call_a2]).InOrder()
+AssertThat(mock_method).HasCalls([call_b1, call_b2]).InOrder()
+AssertThat(mock_method).HasCalls([call_c1, call_c2]).InOrder()
+AssertThat(mock_method).HasCalls([call_d1, call_d2]).InOrder()
+AssertThat(mock_method).HasCalls([call_e1, call_e2])
+AssertThat(mock_method).HasCalls([call_f1, call_f2])
+
 # pylint: enable=bad-continuation
 # pylint: enable=line-too-long
 # pylint: enable=undefined-variable

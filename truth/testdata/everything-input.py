@@ -323,6 +323,25 @@ self.assertRaisesWithRegexpMatch(
     MethodThatRaisesRegexp,
     raises_with_regexp_match_c2, raises_with_regexp_match_d2)
 
+mock_method.assert_called()
+mock_method.assert_not_called()
+mock_method.assert_called_once()
+self.assertEqual(mock_method_a0.call_count, 0)
+self.assertEqual(0, mock_method_b0.call_count)
+self.assertEqual(mock_method_a1.call_count, 1)
+self.assertEqual(1, mock_method_b1.call_count)
+self.assertEqual(mock_method_c0.call_count, 334)
+self.assertEqual(335, mock_method_c1.call_count)
+mock_method.assert_called_with(arg_a1, arg_a2, kwarg_a1=val_a1, kwarg_a2=val_a2)
+mock_method.assert_called_once_with(arg_b1, arg_b2, kwarg_b1=val_b1, kwarg_b2=val_b2)
+mock_method.assert_any_call(arg_c1, arg_c2, kwarg_c1=val_c1, kwarg2_c2=val_c2)
+mock_method.assert_has_calls([call_a1, call_a2])
+mock_method.assert_has_calls([call_b1, call_b2], any_order=False)
+mock_method.assert_has_calls([call_c1, call_c2], any_order=None)
+mock_method.assert_has_calls([call_d1, call_d2], any_order=0)
+mock_method.assert_has_calls([call_e1, call_e2], any_order=True)
+mock_method.assert_has_calls([call_f1, call_f2], any_order=1)
+
 # pylint: enable=bad-continuation
 # pylint: enable=line-too-long
 # pylint: enable=undefined-variable

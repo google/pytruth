@@ -1728,6 +1728,11 @@ class TolerantNumericSubjectToleranceTest(BaseTest, AllowUnresolvedSubjects):
 
 class StringSubjectTest(BaseTest):
 
+  def testNamedMultilineString(self):
+    #s = truth._StringSubject('line1\nline2').Named('string-name')
+    #self.assertEqual(s._GetSubject(), 'actual string-name')
+    pass
+
   def testIsEqualToVerifiesEquality(self):
     s = truth._StringSubject('line1\nline2\n')
     s.IsEqualTo('line1\nline2\n')

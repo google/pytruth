@@ -296,7 +296,7 @@ class _EmptySubject(object):
   """
 
   _unresolved_subjects = set()
-  _unresolved_subjects_lock = threading.Lock()
+  _unresolved_subjects_lock = threading.RLock()
 
   def __init__(self, actual):
     self.__actual = actual
@@ -1368,6 +1368,11 @@ class _TolerantNumericSubject(_EmptySubject):
 class _StringSubject(_ComparableIterableSubject):
   """Subject for all types of strings--basic and Unicode."""
 
+  def _GetSubject(self):
+    if self._actual and '\n' in self._actual:
+      return 'actual {0}'.format(self._name) if self._name else 'actual'
+    return super(_StringSubject, self)._GetSubject()
+
   def IsEqualTo(self, expected):
     # Use unified diff strategy when comparing multiline strings.
     if (isinstance(expected, six.string_types)
@@ -1376,8 +1381,8 @@ class _StringSubject(_ComparableIterableSubject):
         pretty_diff_list = difflib.ndiff(
             self._actual.splitlines(True), expected.splitlines(True))
         pretty_diff = '\n'.join(repr(s)[1:-1] for s in pretty_diff_list)
-        self._Fail('Not true that actual is equal to expected, found diff:\n{0}'
-                   .format(pretty_diff))
+        self._FailWithProposition(
+            'is equal to expected, found diff:\n{0}'.format(pretty_diff))
     else:
       super(_StringSubject, self).IsEqualTo(expected)
 

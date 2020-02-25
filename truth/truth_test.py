@@ -1309,11 +1309,13 @@ class IterableSubjectTest(BaseTest):
     expected = DeclassifiedListTestClass()
     s.IsEqualTo(expected)
     expected.append(3)
-    if six.PY2:
-      expected_failure = 'is equal to <[3]>'
-    else:
-      # Python 3 handles isinstance(DeclassifiedTestClass, C) without raising.
+
+    # Python 3 handles isinstance(DeclassifiedTestClass, C) without raising.
+    if truth._IsIterable(expected):
       expected_failure = 'is missing <[3]>'
+    else:
+      expected_failure = 'is equal to <[3]>'
+
     with self.Failure(expected_failure):
       s.IsEqualTo(expected)
 

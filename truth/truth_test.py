@@ -1592,8 +1592,6 @@ class DictionarySubjectTest(BaseTest):
 
 class NumericSubjectTest(BaseTest):
 
-  _FAKE = mock.sentinel.FakeTolerantNumericSubject
-
   def testZero(self):
     s = truth._NumericSubject(0)
     s.IsZero()
@@ -1601,6 +1599,8 @@ class NumericSubjectTest(BaseTest):
     s.IsNotNan()
     with self.Failure('is non-zero'):
       s.IsNonZero()
+    with self.Failure('should not have been finite'):
+      s.IsNotFinite()
     with self.Failure('is equal to <inf>'):
       s.IsPositiveInfinity()
     with self.Failure('is equal to <-inf>'):
@@ -1615,6 +1615,8 @@ class NumericSubjectTest(BaseTest):
     s.IsNotNan()
     with self.Failure('is zero'):
       s.IsZero()
+    with self.Failure('should not have been finite'):
+      s.IsNotFinite()
     with self.Failure('is equal to <inf>'):
       s.IsPositiveInfinity()
     with self.Failure('is equal to <-inf>'):
@@ -1625,6 +1627,7 @@ class NumericSubjectTest(BaseTest):
   def testPositiveInfinity(self):
     s = truth._NumericSubject(truth.POSITIVE_INFINITY)
     s.IsNonZero()
+    s.IsNotFinite()
     s.IsNotNan()
     s.IsPositiveInfinity()
     with self.Failure('is zero'):
@@ -1639,6 +1642,7 @@ class NumericSubjectTest(BaseTest):
   def testNegativeInfinity(self):
     s = truth._NumericSubject(truth.NEGATIVE_INFINITY)
     s.IsNonZero()
+    s.IsNotFinite()
     s.IsNotNan()
     s.IsNegativeInfinity()
     with self.Failure('is zero'):
@@ -1653,6 +1657,7 @@ class NumericSubjectTest(BaseTest):
   def testNan(self):
     s = truth._NumericSubject(truth.NAN)
     s.IsNonZero()
+    s.IsNotFinite()
     s.IsNan()
     with self.Failure('is zero'):
       s.IsZero()

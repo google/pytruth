@@ -840,8 +840,9 @@ class _IterableSubject(_DefaultSubject):
     return super(_IterableSubject, self).IsEqualTo(other)
 
   def HasSize(self, size):
-    if len(self._actual) != size:
-      self._FailWithBadResults('has a size of', size, 'is', len(self._actual))
+    actual_length = len(self._actual)
+    if actual_length != size:
+      self._FailWithBadResults('has a size of', size, 'is', actual_length)
 
   def IsEmpty(self):
     if self._actual:
@@ -1323,6 +1324,10 @@ class _NumericSubject(_ComparableSubject):
   def IsFinite(self):
     if math.isinf(self._actual) or math.isnan(self._actual):
       self._FailWithSubject('should have been finite')
+
+  def IsNotFinite(self):
+    if not math.isinf(self._actual) and not math.isnan(self._actual):
+      self._FailWithSubject('should not have been finite')
 
   def IsPositiveInfinity(self):
     self.IsEqualTo(POSITIVE_INFINITY)

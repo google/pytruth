@@ -41,7 +41,7 @@ except ImportError:
 try:
   import collections.abc as collections_abc
 except ImportError:
-  import collections as collections_abc
+  import collections as collections_abc  # pylint: disable=reimported
 
 
 TYPE_WORD = 'type' if six.PY2 else 'class'

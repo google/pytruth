@@ -140,12 +140,10 @@ except ImportError:
 import six
 from six.moves import zip
 
-# pylint: disable=reimported
 try:
   import collections.abc as collections_abc
 except ImportError:
-  import collections as collections_abc
-# pylint: enable=reimported
+  import collections as collections_abc  # pylint: disable=reimported
 
 
 # All these attributes must be present for an object to be deemed comparable.

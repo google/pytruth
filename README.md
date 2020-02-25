@@ -200,6 +200,7 @@ unittest                              | PyTruth
 `assertEqual(a, float('inf'))`        | `AssertThat(a).IsPositiveInfinity()`
 `assertEqual(a, float('-inf'))`       | `AssertThat(a).IsNegativeInfinity()`
 `assertFalse(a.isinf() or a.isnan())` | `AssertThat(a).IsFinite()`
+`assertTrue(a.isinf() or a.isnan())`  | `AssertThat(a).IsNotFinite()`
 `assertTrue(a.isnan())`               | `AssertThat(a).IsNan()`
 `assertFalse(a.isnan())`              | `AssertThat(a).IsNotNan()`
 `assertAlmostEqual(a, b, delta=d)`    | `AssertThat(a).IsWithin(d).Of(b)`

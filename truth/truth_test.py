@@ -38,6 +38,11 @@ try:
 except ImportError:
   from mock import mock
 
+try:
+  import collections.abc as collections_abc
+except ImportError:
+  import collections as collections_abc
+
 
 TYPE_WORD = 'type' if six.PY2 else 'class'
 
@@ -81,7 +86,7 @@ class TestComparableClass(object):
     pass
 
 
-class TestMappingClass(collections.Mapping):
+class TestMappingClass(collections_abc.Mapping):
   """Test class that implements the Mapping interface."""
 
   def __getitem__(self, key):

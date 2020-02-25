@@ -140,6 +140,14 @@ except ImportError:
 import six
 from six.moves import zip
 
+# pylint: disable=reimported
+try:
+  import collections.abc as collections_abc
+except ImportError:
+  import collections as collections_abc
+# pylint: enable=reimported
+
+
 # All these attributes must be present for an object to be deemed comparable.
 _COMPARABLE_ATTRS = frozenset(
     '__{0}__'.format(attr) for attr in ('lt', 'le', 'gt', 'ge'))
@@ -262,7 +270,7 @@ def _IsHashable(target):
 def _IsIterable(target):
   """Returns True if the target is iterable."""
   try:
-    return isinstance(target, collections.Iterable)
+    return isinstance(target, collections_abc.Iterable)
   except (AttributeError, TypeError):
     return False
 
@@ -649,7 +657,7 @@ class _ExceptionClassSubject(_ClassSubject, _UnresolvedContextMixin):
     """
     try:
       yield
-    except self._actual as e:
+    except self._actual as e:     # pylint: disable=catching-non-exception
       if matching is not None:
         AssertThat(e).HasMessageThat().ContainsMatch(matching)
       if containing is not None:
@@ -825,7 +833,7 @@ class _IterableSubject(_DefaultSubject):
           and not isinstance(self._actual, type(mock.call))
           and not isinstance(self._actual, six.string_types)
           and not isinstance(other, six.string_types)):
-        if isinstance(self._actual, collections.Sequence):
+        if isinstance(self._actual, collections_abc.Sequence):
           return self.ContainsExactlyElementsIn(other).InOrder()
         return self.ContainsExactlyElementsIn(other)
     except (AttributeError, TypeError):
@@ -857,7 +865,7 @@ class _IterableSubject(_DefaultSubject):
   def ContainsNoDuplicates(self):
     """Asserts that this subject contains no two elements that are the same."""
     # Dictionaries and Sets have unique members by definition; avoid iterating.
-    if isinstance(self._actual, (collections.Mapping, collections.Set)):
+    if isinstance(self._actual, (collections_abc.Mapping, collections_abc.Set)):
       return
     duplicates = []
     entries = set()
@@ -938,10 +946,10 @@ class _IterableSubject(_DefaultSubject):
         for _ in six.moves.xrange(index):
           actual_element = actual_list.pop(0)
           if (_IsHashable(actual_element)
-              and isinstance(actual_not_in_order, collections.Set)):
+              and isinstance(actual_not_in_order, collections_abc.Set)):
             actual_not_in_order.add(actual_element)
           else:
-            if isinstance(actual_not_in_order, collections.Set):
+            if isinstance(actual_not_in_order, collections_abc.Set):
               actual_not_in_order = list(actual_not_in_order)
             if actual_element not in actual_not_in_order:
               actual_not_in_order.append(actual_element)
@@ -950,7 +958,7 @@ class _IterableSubject(_DefaultSubject):
       # The expected value was not in the actual list.
       except ValueError:
         if (not _IsHashable(i)
-            and isinstance(actual_not_in_order, collections.Set)):
+            and isinstance(actual_not_in_order, collections_abc.Set)):
           actual_not_in_order = list(actual_not_in_order)
         if i in actual_not_in_order:
           actual_not_in_order.remove(i)
@@ -1683,7 +1691,7 @@ class _NoneSubject(
 _TYPE_CONSTRUCTORS = {
     BaseException: _ExceptionSubject,
     bool: _BooleanSubject,
-    collections.Mapping: _DictionarySubject,
+    collections_abc.Mapping: _DictionarySubject,
     mock.NonCallableMock: _MockSubject,
     type(None): _NoneSubject
 }

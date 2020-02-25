@@ -39,10 +39,10 @@ http_archive(
 http_archive(
     name = "absl_py",
     urls = [
-        "https://github.com/abseil/abseil-py/archive/pypi-v0.7.1.tar.gz",
+        "https://github.com/abseil/abseil-py/archive/pypi-v0.9.0.tar.gz",
     ],
-    sha256 = "3d0f39e0920379ff1393de04b573bca3484d82a5f8b939e9e83b20b6106c9bbe",
-    strip_prefix = "abseil-py-pypi-v0.7.1",
+    sha256 = "603febc9b95a8f2979a7bdb77d2f5e4d9b30d4e0d59579f88eba67d4e4cc5462",
+    strip_prefix = "abseil-py-pypi-v0.9.0",
 )
 
 http_archive(

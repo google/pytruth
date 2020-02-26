@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 --->
 
+[![Build Status][travis-shield]][travis-link]
+
 # PyTruth: Truth in Python
 
 Provides unittest assertions in a fluent style.
@@ -330,3 +332,8 @@ stricter assertion. Consider using `HasExactlyCalls()` for more clarity.
 unittest                      | PyTruth
 ------------------------------|--------------------------------
 `assertTrue(a.issubclass(b))` | `AssertThat(a).IsSubclassOf(b)`
+
+<!-- references -->
+
+[travis-shield]: https://img.shields.io/travis/google/pytruth.png
+[travis-link]: https://travis-ci.org/google/pytruth

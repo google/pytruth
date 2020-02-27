@@ -7,14 +7,17 @@ python:
   - "3.6"
   - "3.7"
 
+env:
+  global:
+    - BAZEL_VERSION="2.1.1"
+
+before_install:
+  - wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
+  - sudo dpkg -i bazel_${BAZEL_VERSION}-linux-x86_64.deb
+
 install:
   - pip install absl-py
-  - pip install coveralls
   - pip install mock==2.0
-  - pip install pytest pytest-cov
 
 script:
-  - pytest --cov=truth
-
-after_success:
-  - coveralls
+  - bazel test //truth/...

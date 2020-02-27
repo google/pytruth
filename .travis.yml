@@ -11,10 +11,10 @@ install:
   - pip install absl-py
   - pip install coveralls
   - pip install mock==2.0
+  - pip install pytest pytest-cov
 
 script:
-  - python truth/convert_test.py
-  - python truth/truth_test.py
+  - pytest --cov=truth
 
 after_success:
   - coveralls

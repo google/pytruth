@@ -16,9 +16,9 @@ limitations under the License.
 
 # PyTruth: Truth in Python
 
-[![PyPI Version][pypi-shield]][pypi-link]
+[![Development Status][development-shield]][development-link]
 [![Build Status][travis-shield]][travis-link]
-[![Coverage Status][coverage-shield]][coverage-link]
+[![PyPI Version][pypi-shield]][pypi-link]
 [![Python Versions][pyversions-shield]][pyversions-link]
 
 Provides unittest assertions in a fluent style.
@@ -338,11 +338,11 @@ unittest                      | PyTruth
 
 <!-- references -->
 
-[pypi-shield]: https://badge.fury.io/py/pytruth.svg
-[pypi-link]: https://badge.fury.io/py/pytruth
+[development-shield]: https://img.shields.io/pypi/status/pytruth.svg
+[development-link]: https://pypi.org/project/pytruth
 [travis-shield]: https://travis-ci.org/google/pytruth.svg?branch=master
 [travis-link]: https://travis-ci.org/google/pytruth
-[coverage-shield]: https://coveralls.io/repos/github/google/pytruth/badge.svg?branch=master
-[coverage-link]: https://coveralls.io/github/google/pytruth?branch=master
-[pyversions-shield]: https://img.shields.io/pypi/pyversions/pytruth.svg?style=plastic
+[pypi-shield]: https://badge.fury.io/py/pytruth.svg
+[pypi-link]: https://pypi.org/project/pytruth
+[pyversions-shield]: https://img.shields.io/pypi/pyversions/pytruth.svg
 [pyversions-link]: https://github.com/google/pytruth

@@ -1,1 +1,16 @@
 language: python
+
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+
+install:
+  - pip install absl-py
+  - pip install mock==2.0
+
+script:
+  - python truth/convert_test.py
+  - python truth/truth_test.py

@@ -24,7 +24,9 @@ import inspect
 import io
 import os
 import re
+import sys
 import time
+import traceback
 
 os.environ.setdefault('PBR_VERSION', '5.1.3')
 
@@ -431,6 +433,34 @@ class DescribeTimesTest(absltest.TestCase):
     self.assertEqual(truth._DescribeTimes(2), '2 times')
     self.assertEqual(truth._DescribeTimes(263), '263 times')
     self.assertEqual(truth._DescribeTimes(29.35), '29.35 times')
+
+
+class AssertsTruthTest(absltest.TestCase):
+
+  def testAppliedToProtectedMethod(self):
+    with self.assertRaises(AttributeError):
+      @truth.asserts_truth
+      def _ProtectedMethod():  # pylint: disable=unused-variable
+        pass
+
+  def testAssertsTruth(self):
+    @truth.asserts_truth
+    def RaiseTruthAssertionError():
+      raise truth.TruthAssertionError('test')
+
+    try:
+      RaiseTruthAssertionError()
+    except truth.TruthAssertionError as e:
+      tb = traceback.extract_tb(sys.exc_info()[2])
+      if hasattr(e, 'with_traceback'):
+        # The two tracebacks are truth.asserts_truth() and this function.
+        # The RaisesTruthAssertionError() call is skipped.
+        self.assertLen(tb, 2)
+      else:
+        # If the traceback is immutable, RaiseTruthAssertionError() is included.
+        self.assertLen(tb, 3)
+    finally:
+      del tb  # Prevent circular reference.
 
 
 class AllowUnresolvedSubjects(absltest.TestCase):

@@ -122,7 +122,6 @@ from __future__ import print_function
 
 import atexit
 import collections
-import contextlib
 import difflib
 import imp
 import inspect
@@ -295,6 +294,41 @@ def _DescribeTimes(times):
   return 'once' if times == 1 else '{0} times'.format(times)
 
 
+def asserts_truth(func):  # pylint: disable=invalid-name
+  """Decorator for every public method that might raise TruthAssertionError.
+
+  Args:
+    func: the function to be decorated.
+
+  Returns:
+    The decorated function. In Python 2, the function behaves identically.
+    Otherwise, if that function raises a TruthAssertionError, then that error
+    is re-raised with a modified, minimal traceback.
+
+  Raises:
+    AttributeError: if attempted to be applied to a method whose name begins
+        with a single '_'. This decorator's purpose is to reduce the traceback
+        depth of exceptions raised by nested calls in this library, so that the
+        failing assertion has only two frames: the original AssertThat() call,
+        and the "raise truth_assertion" in the decorated function.
+        Annotating inner method calls is contrary to that goal.
+  """
+  if re.match(r'_[^_]', func.__name__):
+    raise AttributeError(
+        '@asserts_truth may not be applied to methods beginning with "_".')
+
+  def AssertThat(*args, **kwargs):  # pylint: disable=redefined-outer-name
+    try:
+      return func(*args, **kwargs)
+    except TruthAssertionError as truth_assertion:
+      if hasattr(truth_assertion, 'with_traceback'):
+        truth_assertion.with_traceback(None)
+        raise truth_assertion
+      raise
+
+  return AssertThat
+
+
 class _EmptySubject(object):
   """Base class for all subjects.
 
@@ -433,6 +467,7 @@ class _DefaultSubject(_EmptySubject):
   All other subjects should subclass this.
   """
 
+  @asserts_truth
   def IsEqualTo(self, other):
     if self._actual != other:
       suffix = ''
@@ -442,22 +477,27 @@ class _DefaultSubject(_EmptySubject):
         suffix = ' However, their repr() representations are equal.'
       self._FailComparingValues('is equal to', other, suffix=suffix)
 
+  @asserts_truth
   def IsNotEqualTo(self, other):
     if self._actual == other:
       self._FailComparingValues('is not equal to', other)
 
+  @asserts_truth
   def IsNone(self):
     if self._actual is not None:
       self._FailWithProposition('is None')
 
+  @asserts_truth
   def IsNotNone(self):
     if self._actual is None:
       self._FailWithProposition('is not None')
 
+  @asserts_truth
   def IsIn(self, iterable):
     if self._actual not in iterable:
       self._FailComparingValues('is equal to any of', iterable)
 
+  @asserts_truth
   def IsNotIn(self, iterable):
     """Asserts that this subject is not a member of the given iterable."""
     if hasattr(iterable, 'index'):
@@ -472,38 +512,47 @@ class _DefaultSubject(_EmptySubject):
       if self._actual in iterable:
         self._FailWithProposition('is not in {0!r}'.format(iterable))
 
+  @asserts_truth
   def IsAnyOf(self, *iterable):
     return self.IsIn(iterable)
 
+  @asserts_truth
   def IsNoneOf(self, *iterable):
     return self.IsNotIn(iterable)
 
+  @asserts_truth
   def IsInstanceOf(self, cls):
     if not isinstance(self._actual, cls):
       self._FailWithBadResults(
           'is an instance of', cls, 'is an instance of', type(self._actual))
 
+  @asserts_truth
   def IsNotInstanceOf(self, cls):
     if isinstance(self._actual, cls):
       self._FailWithSubject(
           'expected not to be an instance of {0}, but was'.format(cls))
 
+  @asserts_truth
   def IsSameAs(self, other):
     if self._actual is not other:
       self._FailComparingValues('is the same instance as', other)
 
+  @asserts_truth
   def IsNotSameAs(self, other):
     if self._actual is other:
       self._FailComparingValues('is not the same instance as', other)
 
+  @asserts_truth
   def IsTruthy(self):
     if not self._actual:
       self._FailWithProposition('is truthy')
 
+  @asserts_truth
   def IsFalsy(self):
     if self._actual:
       self._FailWithProposition('is falsy')
 
+  @asserts_truth
   def IsTrue(self):
     suffix = ''
     if self._actual:
@@ -511,6 +560,7 @@ class _DefaultSubject(_EmptySubject):
                 ' Did you mean to call IsTruthy() instead?')
     self._FailWithProposition('is True', suffix=suffix)
 
+  @asserts_truth
   def IsFalse(self):
     suffix = ''
     if not self._actual:
@@ -522,18 +572,22 @@ class _DefaultSubject(_EmptySubject):
   IsFalsey = IsFalsy
   # pylint: enable=invalid-name
 
+  @asserts_truth
   def HasAttribute(self, attr):
     if not hasattr(self._actual, attr):
       self._FailComparingValues('has attribute', attr)
 
+  @asserts_truth
   def DoesNotHaveAttribute(self, attr):
     if hasattr(self._actual, attr):
       self._FailComparingValues('does not have attribute', attr)
 
+  @asserts_truth
   def IsCallable(self):
     if not callable(self._actual):
       self._FailWithProposition('is callable')
 
+  @asserts_truth
   def IsNotCallable(self):
     if callable(self._actual):
       self._FailWithProposition('is not callable')
@@ -555,13 +609,14 @@ class _UnresolvedContextMixin(object):
         'Exception subject was initiated but not resolved.'
         ' Did you forget to call IsRaised()?')
 
-  def __exit__(self, exc_type, exc_val, exc_tb):
+  def __exit__(self, exc_type, exc, exc_tb):
     """This method must merely exist to be recognized as a context."""
 
 
 class _ExceptionSubject(_DefaultSubject, _UnresolvedContextMixin):
   """Subject for exceptions (i.e., instances of BaseException)."""
 
+  @asserts_truth
   def HasMessage(self, expected):
     AssertThat(self._GetActualMessage()).IsEqualTo(expected)
 
@@ -571,7 +626,6 @@ class _ExceptionSubject(_DefaultSubject, _UnresolvedContextMixin):
   def HasArgsThat(self):
     return AssertThat(self._actual.args)
 
-  @contextlib.contextmanager
   def IsRaised(self):
     """Asserts that an exception matching this subject is raised.
 
@@ -580,21 +634,37 @@ class _ExceptionSubject(_DefaultSubject, _UnresolvedContextMixin):
     match this subject's exactly. As this is a fairly strict match,
     _ExceptionClassSubject.IsRaised() may be easier to use.
 
-    Yields:
-      None
+    Returns:
+      A context within which an expected exception may be raised.
     """
-    try:
-      yield
-    except type(self._actual) as e:
-      if hasattr(self._actual, 'message'):
-        AssertThat(e).HasMessage(self._GetActualMessage())
-      AssertThat(e).HasArgsThat().ContainsExactlyElementsIn(
-          self._actual.args).InOrder()
-    except BaseException as e:    # pylint: disable=broad-except
-      self._FailWithSubject(
-          'should have been raised, but caught <{0!r}>'.format(e))
-    else:
-      self._FailWithSubject('should have been raised, but was not')
+
+    class IsRaisedContext(_EmptySubject):
+      """Context for code under test that is expected to raise an exception."""
+
+      def __init__(self, actual, get_actual_message):
+        super(IsRaisedContext, self).__init__(actual)
+        self._get_actual_message = get_actual_message
+
+      def __enter__(self):
+        return self
+
+      @asserts_truth
+      def __exit__(self, exc_type, exc, exc_tb):
+        if exc:
+          if issubclass(exc_type, type(self._actual)):
+            if hasattr(self._actual, 'message'):
+              AssertThat(exc).HasMessage(self._get_actual_message())
+            AssertThat(exc).HasArgsThat().ContainsExactlyElementsIn(
+                self._actual.args).InOrder()
+          else:
+            self._FailWithSubject(
+                'should have been raised, but caught <{0!r}>'.format(exc))
+        else:
+          self._Resolve()
+          self._FailWithSubject('should have been raised, but was not')
+        return True
+
+    return IsRaisedContext(self._actual, self._GetActualMessage)
 
   def _GetActualMessage(self):
     """Returns the "message" portion of an exception.
@@ -614,11 +684,13 @@ class _ExceptionSubject(_DefaultSubject, _UnresolvedContextMixin):
 class _BooleanSubject(_DefaultSubject):
   """Subject for booleans."""
 
+  @asserts_truth
   def IsTrue(self):
     if self._actual is not True:
       self._FailWithSubject(
           'was expected to be True, but was {0}'.format(self._actual))
 
+  @asserts_truth
   def IsFalse(self):
     if self._actual is not False:
       self._FailWithSubject(
@@ -628,6 +700,7 @@ class _BooleanSubject(_DefaultSubject):
 class _ClassSubject(_DefaultSubject):
   """Subject for classes."""
 
+  @asserts_truth
   def IsSubclassOf(self, other):
     """Fails if this is not the same as, or a subclass of, the given class."""
     if not issubclass(self._actual, other):
@@ -637,7 +710,6 @@ class _ClassSubject(_DefaultSubject):
 class _ExceptionClassSubject(_ClassSubject, _UnresolvedContextMixin):
   """Subject for exception classes (i.e., subclasses of BaseException)."""
 
-  @contextlib.contextmanager
   def IsRaised(self, matching=None, containing=None):
     """Asserts that an exception matching this subject is raised.
 
@@ -650,41 +722,63 @@ class _ExceptionClassSubject(_ClassSubject, _UnresolvedContextMixin):
       containing: string. If present, the raised exception's "message" attribute
           must contain this literal string value.
 
-    Yields:
-      None
+    Returns:
+      A context within which an expected exception may be raised and tested.
     """
-    try:
-      yield
-    except self._actual as e:     # pylint: disable=catching-non-exception
-      if matching is not None:
-        AssertThat(e).HasMessageThat().ContainsMatch(matching)
-      if containing is not None:
-        AssertThat(e).HasMessageThat().Contains(containing)
-    except BaseException as e:    # pylint: disable=broad-except
-      self._FailWithSubject(
-          'should have been raised, but caught <{0!r}>'.format(e))
-    else:
-      self._FailWithSubject('should have been raised, but was not')
+
+    class IsRaisedContext(_EmptySubject):
+      """Context for code under test that is expected to raise an exception."""
+
+      def __init__(self, actual, matching=None, containing=None):
+        super(IsRaisedContext, self).__init__(actual)
+        self._matching = matching
+        self._containing = containing
+
+      def __enter__(self):
+        return self
+
+      @asserts_truth
+      def __exit__(self, exc_type, exc, exc_tb):
+        if exc:
+          if issubclass(exc_type, self._actual):
+            if self._matching is not None:
+              AssertThat(exc).HasMessageThat().ContainsMatch(self._matching)
+            if self._containing is not None:
+              AssertThat(exc).HasMessageThat().Contains(self._containing)
+          else:
+            self._FailWithSubject(
+                'should have been raised, but caught <{0!r}>'.format(exc))
+        else:
+          self._Resolve()
+          self._FailWithSubject('should have been raised, but was not')
+        return True
+
+    return IsRaisedContext(
+        self._actual, matching=matching, containing=containing)
 
 
 class _ComparableSubject(_DefaultSubject):
   """Subject for things that are comparable using the < > <= >= operators."""
 
+  @asserts_truth
   def IsAtLeast(self, other):
     self._CheckNone('IsAtLeast', other)
     if self._actual < other:
       self._FailComparingValues('is at least', other)
 
+  @asserts_truth
   def IsAtMost(self, other):
     self._CheckNone('IsAtMost', other)
     if self._actual > other:
       self._FailComparingValues('is at most', other)
 
+  @asserts_truth
   def IsGreaterThan(self, other):
     self._CheckNone('IsGreaterThan', other)
     if self._actual <= other:
       self._FailComparingValues('is greater than', other)
 
+  @asserts_truth
   def IsLessThan(self, other):
     self._CheckNone('IsLessThan', other)
     if self._actual >= other:
@@ -825,6 +919,7 @@ class _IterableSubject(_DefaultSubject):
   whereas they would always succeed without the .InOrder().
   """
 
+  @asserts_truth
   def IsEqualTo(self, other):
     try:
       if (type(self._actual) is type(other)
@@ -839,28 +934,34 @@ class _IterableSubject(_DefaultSubject):
 
     return super(_IterableSubject, self).IsEqualTo(other)
 
+  @asserts_truth
   def HasSize(self, size):
     actual_length = len(self._actual)
     if actual_length != size:
       self._FailWithBadResults('has a size of', size, 'is', actual_length)
 
+  @asserts_truth
   def IsEmpty(self):
     if self._actual:
       self._FailWithProposition('is empty')
 
+  @asserts_truth
   def IsNotEmpty(self):
     if not self._actual:
       self._FailWithProposition('is not empty')
 
+  @asserts_truth
   def Contains(self, element):
     if element not in self._actual:
       self._FailWithSubject('should have contained <{0!r}>'.format(element))
 
+  @asserts_truth
   def DoesNotContain(self, element):
     if element in self._actual:
       self._FailWithSubject(
           'should not have contained <{0!r}>'.format(element))
 
+  @asserts_truth
   def ContainsNoDuplicates(self):
     """Asserts that this subject contains no two elements that are the same."""
     # Dictionaries and Sets have unique members by definition; avoid iterating.
@@ -876,18 +977,23 @@ class _IterableSubject(_DefaultSubject):
       self._FailWithSubject(
           'has the following duplicates: <{0}>'.format(duplicates))
 
+  @asserts_truth
   def ContainsAllIn(self, expected):
     return self._ContainsAll('contains all elements in', expected)
 
+  @asserts_truth
   def ContainsAllOf(self, *expected):
     return self._ContainsAll('contains all of', expected)
 
+  @asserts_truth
   def ContainsAnyIn(self, expected):
     return self._ContainsAny('contains any element in', expected)
 
+  @asserts_truth
   def ContainsAnyOf(self, *expected):
     return self._ContainsAny('contains any of', expected)
 
+  @asserts_truth
   def ContainsExactly(self, *expected):
     expecting_single_iterable = (
         len(expected) == 1 and _IsIterable(expected)
@@ -895,24 +1001,31 @@ class _IterableSubject(_DefaultSubject):
     return self._ContainsExactlyElementsIn(
         expected, warn_elements_in=expecting_single_iterable)
 
+  @asserts_truth
   def ContainsExactlyElementsIn(self, expected):
     return self._ContainsExactlyElementsIn(expected)
 
+  @asserts_truth
   def ContainsNoneIn(self, excluded):
     self._ContainsNone('contains no elements in', excluded)
 
+  @asserts_truth
   def ContainsNoneOf(self, *excluded):
     self._ContainsNone('contains none of', excluded)
 
+  @asserts_truth
   def IsOrdered(self):
     self.IsOrderedAccordingTo(Cmp)
 
+  @asserts_truth
   def IsOrderedAccordingTo(self, comparator):
     self._PairwiseCheck(lambda a, b: comparator(a, b) <= 0, strict=False)
 
+  @asserts_truth
   def IsStrictlyOrdered(self):
     self.IsStrictlyOrderedAccordingTo(Cmp)
 
+  @asserts_truth
   def IsStrictlyOrderedAccordingTo(self, comparator):
     self._PairwiseCheck(lambda a, b: comparator(a, b) < 0, strict=True)
 
@@ -1195,6 +1308,7 @@ class _Ordered(_EmptySubject):
 class _InOrder(_Ordered):
   """Adverb for an iterable that is already known to be in order."""
 
+  @asserts_truth
   def InOrder(self):
     pass
 
@@ -1208,6 +1322,7 @@ class _NotInOrder(_Ordered):
     self._check = check
     self._expected = expected
 
+  @asserts_truth
   def InOrder(self):
     self._FailComparingValues(self._check, self._expected)
 
@@ -1244,6 +1359,7 @@ class _DictionarySubject(_ComparableIterableSubject):
   The warnings about orderedness in _IterableSubject also apply.
   """
 
+  @asserts_truth
   def IsEqualTo(self, other):
     if type(self._actual) is type(other):
       if isinstance(self._actual, collections.OrderedDict):
@@ -1252,14 +1368,17 @@ class _DictionarySubject(_ComparableIterableSubject):
 
     return super(_DictionarySubject, self).IsEqualTo(other)
 
+  @asserts_truth
   def ContainsKey(self, key):
     if key not in self._actual:
       self._FailWithProposition('contains key <{0}>'.format(key))
 
+  @asserts_truth
   def DoesNotContainKey(self, key):
     if key in self._actual:
       self._FailWithProposition('does not contain key <{0}>'.format(key))
 
+  @asserts_truth
   def ContainsItem(self, key, value):
     """Assertion that the subject contains the key mapping to the value."""
     if key in self._actual:
@@ -1283,11 +1402,13 @@ class _DictionarySubject(_ComparableIterableSubject):
 
     self._FailWithProposition('contains item <{0!r}>'.format((key, value)))
 
+  @asserts_truth
   def DoesNotContainItem(self, key, value):
     if key in self._actual and self._actual[key] == value:
       self._FailWithProposition(
           'does not contain item <{0!r}>'.format((key, value)))
 
+  @asserts_truth
   def ContainsExactly(self, *items):
     if len(items) % 2:
       raise ValueError(
@@ -1299,6 +1420,7 @@ class _DictionarySubject(_ComparableIterableSubject):
       expected[items[i]] = items[i + 1]
     return self.ContainsExactlyItemsIn(expected)
 
+  @asserts_truth
   def ContainsExactlyItemsIn(self, expected):
     return AssertThat(self._actual.items()).ContainsExactly(*expected.items())
 
@@ -1313,32 +1435,40 @@ class _DictionarySubject(_ComparableIterableSubject):
 class _NumericSubject(_ComparableSubject):
   """Subject for all types of numbers--int, long, float, and complex."""
 
+  @asserts_truth
   def IsZero(self):
     if self._actual != 0:
       self._FailWithProposition('is zero')
 
+  @asserts_truth
   def IsNonZero(self):
     if self._actual == 0:
       self._FailWithProposition('is non-zero')
 
+  @asserts_truth
   def IsFinite(self):
     if math.isinf(self._actual) or math.isnan(self._actual):
       self._FailWithSubject('should have been finite')
 
+  @asserts_truth
   def IsNotFinite(self):
     if not math.isinf(self._actual) and not math.isnan(self._actual):
       self._FailWithSubject('should not have been finite')
 
+  @asserts_truth
   def IsPositiveInfinity(self):
     self.IsEqualTo(POSITIVE_INFINITY)
 
+  @asserts_truth
   def IsNegativeInfinity(self):
     self.IsEqualTo(NEGATIVE_INFINITY)
 
+  @asserts_truth
   def IsNan(self):
     if not math.isnan(self._actual):
       self._FailComparingValues('is equal to', NAN)
 
+  @asserts_truth
   def IsNotNan(self):
     if math.isnan(self._actual):
       self._FailWithSubject('should not have been <{0}>'.format(NAN))
@@ -1358,6 +1488,7 @@ class _TolerantNumericSubject(_EmptySubject):
     self._tolerance = tolerance
     self._within = within
 
+  @asserts_truth
   def Of(self, expected):
     self._CheckTolerance()
     tolerably_equal = abs(self._actual - expected) <= self._tolerance
@@ -1384,6 +1515,7 @@ class _StringSubject(_ComparableIterableSubject):
       return 'actual {0}'.format(self._name) if self._name else 'actual'
     return super(_StringSubject, self)._GetSubject()
 
+  @asserts_truth
   def IsEqualTo(self, expected):
     # Use unified diff strategy when comparing multiline strings.
     if (isinstance(expected, six.string_types)
@@ -1397,36 +1529,43 @@ class _StringSubject(_ComparableIterableSubject):
     else:
       super(_StringSubject, self).IsEqualTo(expected)
 
+  @asserts_truth
   def HasLength(self, expected):
     actual_length = len(self._actual)
     if actual_length != expected:
       self._FailWithProposition(
           'has a length of {0}. It is {1}'.format(expected, actual_length))
 
+  @asserts_truth
   def StartsWith(self, prefix):
     if not self._actual.startswith(prefix):
       self._FailComparingValues('starts with', prefix)
 
+  @asserts_truth
   def EndsWith(self, suffix):
     if not self._actual.endswith(suffix):
       self._FailComparingValues('ends with', suffix)
 
+  @asserts_truth
   def Matches(self, regex):
     r = re.compile(regex)
     if not r.match(self._actual):
       self._FailWithProposition('matches <{0}>'.format(r.pattern))
 
+  @asserts_truth
   def DoesNotMatch(self, regex):
     r = re.compile(regex)
     if r.match(self._actual):
       self._FailWithProposition('fails to match <{0}>'.format(r.pattern))
 
+  @asserts_truth
   def ContainsMatch(self, regex):
     r = re.compile(regex)
     if not r.search(self._actual):
       self._FailWithSubject(
           'should have contained a match for <{0}>'.format(r.pattern))
 
+  @asserts_truth
   def DoesNotContainMatch(self, regex):
     r = re.compile(regex)
     if r.search(self._actual):
@@ -1489,6 +1628,7 @@ class _MockSubject(_NamedMockSubject):
     AssertThat(actual_mock).IsSameAs(expected_mock)
   """
 
+  @asserts_truth
   def WasCalled(self):
     if not self._actual.call_count:
       self._Fail(
@@ -1496,6 +1636,7 @@ class _MockSubject(_NamedMockSubject):
           .format(self.name, self._actual.mock_calls))
     return _MockCalledSubject(self._actual)
 
+  @asserts_truth
   def WasNotCalled(self):
     if self._actual.call_count:
       self._Fail(
@@ -1504,6 +1645,7 @@ class _MockSubject(_NamedMockSubject):
           .format(self.name, _DescribeTimes(self._actual.call_count),
                   self._actual.mock_calls))
 
+  @asserts_truth
   def HasCalls(self, *calls, **kwargs):
     """Assert that the mocked function was called with all the given calls.
 
@@ -1546,6 +1688,7 @@ class _MockSubject(_NamedMockSubject):
       return contains_all
     return contains_all.InOrder()
 
+  @asserts_truth
   def HasExactlyCalls(self, *calls):
     """Assert that the mocked function was called with exactly the given calls.
 
@@ -1580,9 +1723,11 @@ class _MockCalledSubject(_NamedMockSubject):
     super(_MockCalledSubject, self).__init__(actual)
     self._Resolve()      # Allow AssertThat(m).WasCalled().
 
+  @asserts_truth
   def Once(self):
     return self.Times(1)
 
+  @asserts_truth
   def Times(self, expected):
     """Asserts that the mock was called an expected number of times."""
     if self._actual.call_count != expected:
@@ -1595,6 +1740,7 @@ class _MockCalledSubject(_NamedMockSubject):
                   self._actual.mock_calls))
     return self
 
+  @asserts_truth
   def With(self, *args, **kwargs):
     call = mock.call(*args, **kwargs)
     if call not in self._actual.mock_calls:
@@ -1604,6 +1750,7 @@ class _MockCalledSubject(_NamedMockSubject):
           .format(self.name, call, self._actual.mock_calls))
     return _MockCalledWithSubject(self._actual, call)
 
+  @asserts_truth
   def LastWith(self, *args, **kwargs):
     if (self._actual.call_args is None
         or self._actual.call_args != (args, kwargs)):
@@ -1622,9 +1769,11 @@ class _MockCalledWithSubject(_NamedMockSubject):
     self._call = call
     self._Resolve()      # Allow AssertThat(m).WasCalled().With(...).
 
+  @asserts_truth
   def Once(self):
     self.Times(1)
 
+  @asserts_truth
   def Times(self, expected):
     actual_call_count = self._actual.mock_calls.count(self._call)
     if actual_call_count != expected:
@@ -1670,9 +1819,11 @@ class _NoneSubject(
   allowing Python 3's TypeError to bubble up.
   """
 
+  @asserts_truth
   def IsEqualTo(self, other):
     return _DefaultSubject.IsEqualTo(self, other)
 
+  @asserts_truth
   def __getattribute__(self, name):
     if (name.startswith('_') or
         name[0] == name[0].lower() or
@@ -1683,9 +1834,10 @@ class _NoneSubject(
       return object.__getattribute__(self, name)
 
     self._Fail(
-        'Invalid operation on None subject: <{0}>.'
+        'Invalid operation on {0} subject: <{1}>.'
         ' Check that the actual value of the subject is not None,'
-        ' or AssertThat the subject IsNone()/IsNotNone()'.format(name))
+        ' or AssertThat the subject IsNone()/IsNotNone()'
+        .format(self._actual, name))
 
 
 # Tight bindings of object superclasses to subject constructors.

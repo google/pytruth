@@ -11,7 +11,7 @@ TESTS_REQUIRES = [
 ]
 
 setup(name='pytruth',
-      version='1.0.2',
+      version='1.1.0',
       description='Provides unittest assertions in a fluent style.',
       long_description=open('README.md').read(),
       long_description_content_type='text/markdown',

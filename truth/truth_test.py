@@ -2225,7 +2225,7 @@ class NoneSubjectTest(BaseTest):
         'ContainsAnyIn': ((None,),),
         'ContainsAnyOf': (None,),
         'ContainsExactlyElementsIn': ((None,),),
-        'ContainsNone': ((5,),),
+        'ContainsNoneIn': ((5,),),
         'ContainsNoneOf': (5,),
         'IsOrdered': (),
         'IsOrderedAccordingTo': (truth.Cmp,),

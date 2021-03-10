@@ -101,7 +101,7 @@ class TestMappingClass(collections_abc.Mapping):
     return 42
 
 
-class ClassicTestClass:      # pylint: disable=old-style-class
+class ClassicTestClass:
   """Old-style test class, not inheriting from object."""
 
 
